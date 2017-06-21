@@ -9,7 +9,8 @@ Fields common for all entries:
     action,type,id
 
 All common fields are required. Unless specified otherwise, other fields can be
-empty.
+empty. Boolean fields contain their name if the value is true or are empty if
+it's false.
 
 `Action` can be one of `add`, `edit`, `del`. `Type` corresponds to the Discord
 type, such as `message` or `reaction`. `Id` is the ID of the object or the
