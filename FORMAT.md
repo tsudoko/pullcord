@@ -21,7 +21,7 @@ subject of the action, depending on the entry type.
 
 ### `message`
 
-    action,type,id,authorid,content,timestamp,tts
+    action,type,id,authorid,timestamp,content,tts
 
  - `authorid` (required)
  - `timestamp` (required)
@@ -56,15 +56,24 @@ subject of the action, depending on the entry type.
     action,type,id,xaction,name,avatar,game,streaming
 
  - `xaction` - `leave` or `ban`
-   - `leave` - leave or kick
+    - `leave` - leave or kick
  - `game` - game name
  - `streaming` (boolean)
 
-### `emoji`
+### `role`
 
-    action,type,id,name
+    action,type,id,color,pos,perms
 
- - `name` (required)
+ - `color` (required)
+ - `pos` (required)
+ - `perms` (required)
+
+### `roleassign`
+
+    action,type,userid,roleid
+
+ - `userid` (required)
+ - `roleid` (required)
 
 ### `channel`
 
@@ -72,3 +81,9 @@ subject of the action, depending on the entry type.
 
  - `name` (required)
  - `chantype` (required) - `text` or `voice`
+
+### `emoji`
+
+    action,type,id,name
+
+ - `name` (required)
