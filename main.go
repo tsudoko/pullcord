@@ -20,16 +20,28 @@ var (
 	xcid = flag.String("C", "", "comma-separated channel IDs to exclude")
 	xgid = flag.String("S", "", "comma-separated server IDs to exclude")
 
+	cids, gids, xcids, xgids map[string]bool
+
 	continuous = flag.Bool("continuous", false, "keep archiving in background after fetching the whole history")
 )
 
 func do(d *discordgo.Session, event *discordgo.Ready) {
-	log.Println("stub")
+	channels := wantedChannels(d)
+
+	for _, c := range channels {
+		log.Printf("going to archive %s/#%s", c.GuildID, c.Name)
+	}
+
 	os.Exit(0)
 }
 
 func main() {
 	flag.Parse()
+
+	cids = makeWanted(*cid)
+	gids = makeWanted(*gid)
+	xcids = makeWanted(*xcid)
+	xgids = makeWanted(*xgid)
 
 	d, err := discordgo.New(*username, *password, *token)
 	if err != nil {
