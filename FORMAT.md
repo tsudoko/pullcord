@@ -1,0 +1,74 @@
+Log format
+==========
+
+Logs are [RFC 4180][]-compliant CSV files. All entries describe actions, i.e.
+each new message, edit or deletion is a separate entry.
+
+Fields common for all entries:
+
+    action,type,id
+
+All common fields are required. Unless specified otherwise, other fields can be
+empty.
+
+`Action` can be one of `add`, `edit`, `del`. `Type` corresponds to the Discord
+type, such as `message` or `reaction`. `Id` is the ID of the object or the
+subject of the action, depending on the entry type.
+
+[RFC 4180]: https://www.ietf.org/rfc/rfc4180.txt
+
+## Channel entry types
+
+### `message`
+
+    action,type,id,authorid,content,timestamp,tts
+
+ - `authorid` (required)
+ - `timestamp` (required)
+ - `tts` (boolean)
+
+### `attachment`
+
+    action,type,messageid,id
+
+ - `messageid` (required)
+ - `id` (required)
+
+### `reaction`
+
+    action,type,messageid,userid,emojiid
+
+ - `messageid` (required)
+ - `userid` (required)
+ - `emojiid` (required)
+
+### `embed`
+
+    action,type,messageid,json
+
+ - `messageid` (required)
+ - `json` (required) - JSON-encoded [embed contents](https://discordapp.com/developers/docs/resources/channel#embed-object)
+
+## Server entry types
+
+### `user`
+
+    action,type,id,xaction,name,avatar,game,streaming
+
+ - `xaction` - `leave` or `ban`
+   - `leave` - leave or kick
+ - `game` - game name
+ - `streaming` (boolean)
+
+### `emoji`
+
+    action,type,id,name
+
+ - `name` (required)
+
+### `channel`
+
+    action,type,id,chantype,name,topic
+
+ - `name` (required)
+ - `chantype` (required) - `text` or `voice`
