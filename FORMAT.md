@@ -22,7 +22,7 @@ subject of the action, depending on the entry type.
 
 ### `message`
 
-    action,type,id,authorid,timestamp,content,tts
+    action,type,id,authorid,timestamp,tts,content
 
  - `authorid` (required)
  - `timestamp` (required)
