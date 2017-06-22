@@ -78,10 +78,13 @@ subject of the action, depending on the entry type.
 
 ### `channel`
 
-    action,type,id,chantype,name,topic
+    action,type,id,chantype,pos,name,topic
 
- - `name` (required)
+TODO: permission overwrites
+
  - `chantype` (required) - `text` or `voice`
+ - `pos` (required)
+ - `name` (required)
 
 ### `emoji`
 
