@@ -60,6 +60,14 @@ Important implementation note: seems to require state tracking, might get messy
 
 ## Server entry types
 
+### `guild`
+
+    action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid,mfalevel
+
+ - `name` (required)
+ - `ownerid` (required)
+ - `embeddable` (boolean)
+
 ### `user`
 
     action,type,id,xaction,name,avatar,game,streaming
@@ -96,8 +104,9 @@ TODO: permission overwrites
 
 ### `emoji`
 
-    action,type,id,name
+    action,type,id,name,colons
 
  - `name` (required)
+ - `colons` (boolean)
 
 Important implementation note: seems to require state tracking, might get messy
