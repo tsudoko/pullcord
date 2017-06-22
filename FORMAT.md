@@ -50,6 +50,14 @@ subject of the action, depending on the entry type.
  - `messageid` (required)
  - `json` (required) - JSON-encoded [embed contents](https://discordapp.com/developers/docs/resources/channel#embed-object)
 
+### `pin`
+
+    action,type,messageid
+
+ - `messageid` (required)
+
+Important implementation note: seems to require state tracking, might get messy
+
 ## Server entry types
 
 ### `user`
@@ -80,14 +88,16 @@ subject of the action, depending on the entry type.
 
     action,type,id,chantype,pos,name,topic
 
-TODO: permission overwrites
-
  - `chantype` (required) - `text` or `voice`
  - `pos` (required)
  - `name` (required)
+
+TODO: permission overwrites
 
 ### `emoji`
 
     action,type,id,name
 
  - `name` (required)
+
+Important implementation note: seems to require state tracking, might get messy
