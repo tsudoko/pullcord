@@ -56,8 +56,6 @@ subject of the action, depending on the entry type.
 
  - `messageid` (required)
 
-Important implementation note: seems to require state tracking, might get messy
-
 ## Server entry types
 
 ### `guild`
@@ -108,5 +106,3 @@ TODO: permission overwrites
 
  - `name` (required)
  - `colons` (boolean)
-
-Important implementation note: seems to require state tracking, might get messy
