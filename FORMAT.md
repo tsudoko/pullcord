@@ -60,7 +60,7 @@ subject of the action, depending on the entry type.
 
 ### `guild`
 
-    action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid,mfalevel
+    action,type,id,icon,name,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid,mfalevel
 
  - `name` (required)
  - `ownerid` (required)
