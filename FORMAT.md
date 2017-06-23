@@ -68,10 +68,7 @@ subject of the action, depending on the entry type.
 
 ### `user`
 
-    action,type,id,avatar,name,game,streaming
-
- - `game` - game name
- - `streaming` (boolean)
+    action,type,id,avatar,name
 
 ### `ban`
 
