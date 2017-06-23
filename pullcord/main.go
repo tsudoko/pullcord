@@ -8,6 +8,8 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/tsudoko/pullcord/pull"
 )
 
 var (
@@ -30,6 +32,8 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 	for _, c := range channels {
 		log.Printf("going to archive %s/#%s", c.GuildID, c.Name)
+		//go pull.Channel(d, c.ID)
+		pull.Channel(d, c.ID)
 	}
 
 	os.Exit(0)
