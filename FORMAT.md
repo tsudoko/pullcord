@@ -68,12 +68,17 @@ subject of the action, depending on the entry type.
 
 ### `user`
 
-    action,type,id,xaction,name,avatar,game,streaming
+    action,type,id,avatar,name,game,streaming
 
- - `xaction` - `leave` or `ban`
-    - `leave` - leave or kick
  - `game` - game name
  - `streaming` (boolean)
+
+### `ban`
+
+    action,type,userid,reason
+
+ - `userid` (required)
+ - `reason` - ban reason, can't be seen by regular members by default
 
 ### `role`
 
