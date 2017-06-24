@@ -43,12 +43,24 @@ func Channel(d *discordgo.Session, id string) {
 				}
 
 				for _, u := range users {
-					fmt.Println(logentry.Reaction("add", u.ID, msgs[i].ID, r.Emoji.APIName()))
+					reaction := &discordgo.MessageReaction{
+						UserID:    u.ID,
+						MessageID: msgs[i].ID,
+						Emoji:     *r.Emoji,
+						ChannelID: id,
+					}
+					fmt.Println(logentry.Reaction("add", reaction))
 				}
 
 				if r.Count > 100 {
+					reaction := &discordgo.MessageReaction{
+						UserID:    "",
+						MessageID: msgs[i].ID,
+						Emoji:     *r.Emoji,
+						ChannelID: id,
+					}
 					for i := 0; i < r.Count-100; i++ {
-						fmt.Println(logentry.Reaction("add", "", msgs[i].ID, r.Emoji.APIName()))
+						fmt.Println(logentry.Reaction("add", reaction))
 					}
 				}
 			}
