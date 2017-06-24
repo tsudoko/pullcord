@@ -1,8 +1,13 @@
 Log format
 ==========
 
-Logs are [RFC 4180][]-compliant CSV files. All entries describe actions, i.e.
-each new message, edit or deletion is a separate entry.
+Logs are mostly [RFC 4180][]-compliant CSV files. Unlike RFC 4180 CSV, records
+are delimited by line feeds and fields aren't allowed to contain record
+delimiters. There are two escape sequences: `\n`, which replaces U+000A LINE
+FEED, and `\\` for U+005C REVERSE SOLIDUS.
+
+All entries describe actions, i.e. each new message, edit or deletion is a
+separate entry.
 
 Fields common for all entries:
 
