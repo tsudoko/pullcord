@@ -27,11 +27,13 @@ subject of the action, depending on the entry type.
 
 ### `message`
 
-    action,type,id,authorid,timestamp,tts,content
+    action,type,id,authorid,editedtime,tts,content
 
  - `authorid` (required)
- - `timestamp` (required)
+ - `editedtime` - ISO 8601 timestamp (µs) of last edit or deletion
  - `tts` (boolean)
+
+Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `attachment`
 

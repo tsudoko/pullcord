@@ -13,12 +13,12 @@ func Message(op string, m *discordgo.Message) []string {
 		tts string
 	)
 
-	switch op {
-	case "edit":
-		ts = string(m.EditedTimestamp)
-	case "del": // exact deletions can't be retrieved from audit logs or the history
-		// TODO: move to the outer handler?
+	// exact deletions can't be retrieved from audit logs or the history
+	// TODO: move to the outer handler?
+	if op == "del" {
 		ts = time.Now().Format("2006-01-02T15:04:05.000000-07:00")
+	} else if m.EditedTimestamp != "" {
+		ts = string(m.EditedTimestamp)
 	}
 
 	if m.Tts {
