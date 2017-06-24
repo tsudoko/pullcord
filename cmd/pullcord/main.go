@@ -32,8 +32,14 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 	for _, c := range channels {
 		log.Printf("going to archive %s/#%s", c.GuildID, c.Name)
-		//go logpull.Channel(d, c.ID)
-		logpull.Channel(d, c.ID)
+
+		if err := os.MkdirAll(c.GuildID, os.ModeDir|0755); err != nil {
+			log.Printf("creating guild dir for %s failed", c.GuildID)
+			continue
+		}
+
+		//go logpull.Channel(d, c.GuildID, c.ID, "0")
+		logpull.Channel(d, c.GuildID, c.ID, "0")
 	}
 
 	os.Exit(0)

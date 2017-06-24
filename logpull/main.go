@@ -4,36 +4,43 @@ package logpull
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/tsudoko/pullcord/logentry"
+	"github.com/tsudoko/pullcord/logformat"
 )
 
-func Channel(d *discordgo.Session, id string) {
-	msgid := "0"
+func Channel(d *discordgo.Session, gid, id, after string) {
+	f, err := os.Create(fmt.Sprintf("%s/%s.tsv", gid, id))
+	if err != nil {
+		log.Printf("[%s] error creating log file: %v", id, err)
+		return
+	}
+
 	for {
-		msgs, err := d.ChannelMessages(id, 100, "", msgid, "")
+		msgs, err := d.ChannelMessages(id, 100, "", after, "")
 		if err != nil {
-			log.Printf("[%s] error getting messages from %s: %v", id, msgid, err)
+			log.Printf("[%s] error getting messages from %s: %v", id, after, err)
 		}
 
 		if len(msgs) == 0 {
 			break
 		}
 
-		msgid = msgs[0].ID
+		after = msgs[0].ID
 
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
-			fmt.Println(logentry.Message("add", msgs[i]))
+			logformat.Write(f, logentry.Message("add", msgs[i]))
 
 			for _, e := range msgs[i].Embeds {
-				fmt.Println(logentry.Embed("add", msgs[i].ID, e))
+				logformat.Write(f, logentry.Embed("add", msgs[i].ID, e))
 			}
 
 			for _, a := range msgs[i].Attachments {
-				fmt.Println(logentry.Attachment("add", msgs[i].ID, a))
+				logformat.Write(f, logentry.Attachment("add", msgs[i].ID, a))
 			}
 
 			for _, r := range msgs[i].Reactions {
@@ -49,7 +56,7 @@ func Channel(d *discordgo.Session, id string) {
 						Emoji:     *r.Emoji,
 						ChannelID: id,
 					}
-					fmt.Println(logentry.Reaction("add", reaction))
+					logformat.Write(f, logentry.Reaction("add", reaction))
 				}
 
 				if r.Count > 100 {
@@ -60,7 +67,7 @@ func Channel(d *discordgo.Session, id string) {
 						ChannelID: id,
 					}
 					for i := 0; i < r.Count-100; i++ {
-						fmt.Println(logentry.Reaction("add", reaction))
+						logformat.Write(f, logentry.Reaction("add", reaction))
 					}
 				}
 			}
