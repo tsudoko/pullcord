@@ -22,7 +22,7 @@ var avatarFormats = []string{
 }
 
 func saveFile(r io.Reader, fPath string) error {
-	if err := os.MkdirAll(path.Dir(fPath), os.ModeDir|0644); err != nil {
+	if err := os.MkdirAll(path.Dir(fPath), os.ModeDir|0755); err != nil {
 		return err
 	}
 
