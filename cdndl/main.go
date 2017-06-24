@@ -1,11 +1,11 @@
 package cdndl
 
 import (
-	"net/url"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"io"
+	"net/url"
 	"os"
 	"path"
 )
