@@ -9,7 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/tsudoko/pullcord/pull"
+	"github.com/tsudoko/pullcord/logpull"
 )
 
 var (
@@ -32,8 +32,8 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 	for _, c := range channels {
 		log.Printf("going to archive %s/#%s", c.GuildID, c.Name)
-		//go pull.Channel(d, c.ID)
-		pull.Channel(d, c.ID)
+		//go logpull.Channel(d, c.ID)
+		logpull.Channel(d, c.ID)
 	}
 
 	os.Exit(0)

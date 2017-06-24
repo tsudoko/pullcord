@@ -1,5 +1,5 @@
-// Package pull contains functions related to downloading historical data.
-package pull
+// Package logpull contains functions related to downloading historical data.
+package logpull
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/tsudoko/pullcord/entry"
+	"github.com/tsudoko/pullcord/logentry"
 )
 
 func Channel(d *discordgo.Session, id string) {
@@ -26,14 +26,14 @@ func Channel(d *discordgo.Session, id string) {
 
 		// messages are retrieved in descending order
 		for i := len(msgs)-1; i >= 0; i-- {
-			fmt.Println(entry.Message("add", msgs[i]))
+			fmt.Println(logentry.Message("add", msgs[i]))
 
 			for _, e := range msgs[i].Embeds {
-				fmt.Println(entry.Embed("add", msgs[i].ID, e))
+				fmt.Println(logentry.Embed("add", msgs[i].ID, e))
 			}
 
 			for _, a := range msgs[i].Attachments {
-				fmt.Println(entry.Attachment("add", msgs[i].ID, a))
+				fmt.Println(logentry.Attachment("add", msgs[i].ID, a))
 			}
 
 			// a bit more complicated, needs to iterate over d.MessageReactions(id, msgs[i].ID, emojiID, $limit)

@@ -1,4 +1,4 @@
-package entry
+package logentry
 
 import (
 	"encoding/json"
