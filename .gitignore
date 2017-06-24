@@ -1,2 +1,2 @@
-listcord/listcord
-pullcord/pullcord
+cmd/**/listcord
+cmd/**/pullcord
