@@ -1,10 +1,13 @@
 Log format
 ==========
 
-Logs are mostly [RFC 4180][]-compliant CSV files. Unlike RFC 4180 CSV, records
-are delimited by line feeds and fields aren't allowed to contain record
-delimiters. There are two escape sequences: `\n`, which replaces U+000A LINE
-FEED, and `\\` for U+005C REVERSE SOLIDUS.
+Logs are [TSV][] files. Records are delimited by line feeds.
+
+There are three escape sequences:
+
+    \t U+0009 CHARACTER TABULATION
+    \n U+000A LINE FEED
+    \\ U+005C REVERSE SOLIDUS
 
 All entries describe actions, i.e. each new message, edit or deletion is a
 separate entry.
@@ -21,7 +24,7 @@ it's false.
 type, such as `message` or `reaction`. `Id` is the ID of the object or the
 subject of the action, depending on the entry type.
 
-[RFC 4180]: https://www.ietf.org/rfc/rfc4180.txt
+[TSV]: https://en.wikipedia.org/wiki/Tab-separated_values
 
 ## Channel entry types
 
