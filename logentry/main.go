@@ -32,8 +32,8 @@ func Attachment(op string, messageID string, a *discordgo.MessageAttachment) []s
 	return []string{op, "attachment", messageID, a.ID}
 }
 
-func Reaction(op string, r *discordgo.MessageReaction) []string {
-	return []string{op, "reaction", r.MessageID, r.UserID, r.Emoji.ID}
+func Reaction(op string, messageID, userID, emojiID string) []string {
+	return []string{op, "reaction", messageID, userID, emojiID}
 }
 
 func Embed(op string, messageID string, e *discordgo.MessageEmbed) []string {

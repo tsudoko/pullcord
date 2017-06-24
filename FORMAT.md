@@ -42,11 +42,11 @@ subject of the action, depending on the entry type.
 
 ### `reaction`
 
-    action,type,messageid,userid,emojiid
+    action,type,messageid,userid,emoji
 
  - `messageid` (required)
- - `userid` (required)
- - `emojiid` (required)
+ - `userid` - can be empty if there are more than 100 reactions with a given emoji
+ - `emoji` (required) - character or `<emojiname>:<emojiid>`
 
 ### `embed`
 

@@ -25,7 +25,7 @@ func Channel(d *discordgo.Session, id string) {
 		msgid = msgs[0].ID
 
 		// messages are retrieved in descending order
-		for i := len(msgs)-1; i >= 0; i-- {
+		for i := len(msgs) - 1; i >= 0; i-- {
 			fmt.Println(logentry.Message("add", msgs[i]))
 
 			for _, e := range msgs[i].Embeds {
@@ -36,13 +36,22 @@ func Channel(d *discordgo.Session, id string) {
 				fmt.Println(logentry.Attachment("add", msgs[i].ID, a))
 			}
 
-			// a bit more complicated, needs to iterate over d.MessageReactions(id, msgs[i].ID, emojiID, $limit)
-			// might be expensive
-			/*
 			for _, r := range msgs[i].Reactions {
+				users, err := d.MessageReactions(id, msgs[i].ID, r.Emoji.APIName(), 100)
+				if err != nil {
+					log.Printf("[%s] error getting users for reaction %s to %s: %v", id, r.Emoji.APIName(), msgs[i].ID, err)
+				}
 
+				for _, u := range users {
+					fmt.Println(logentry.Reaction("add", u.ID, msgs[i].ID, r.Emoji.APIName()))
+				}
+
+				if r.Count > 100 {
+					for i := 0; i < r.Count-100; i++ {
+						fmt.Println(logentry.Reaction("add", "", msgs[i].ID, r.Emoji.APIName()))
+					}
+				}
 			}
-			*/
 		}
 
 		log.Printf("[%s] downloaded %d messages, last id: %s with content %s", id, len(msgs), msgs[0].ID, msgs[0].Content)
