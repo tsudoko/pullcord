@@ -16,7 +16,7 @@ const (
 )
 
 var avatarFormats = []string{
-	"%s/a_%s.gif",
+	"%s/%s.gif",
 	"%s/%s.png",
 	"%s/%s.jpg",
 }
