@@ -26,13 +26,17 @@ func saveFile(r io.Reader, fPath string) error {
 		return err
 	}
 
-	f, err := os.Create(fPath)
+	f, err := os.Create(fPath + ".part")
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	if _, err := io.Copy(f, r); err != nil {
+		return err
+	}
+
+	if err = os.Rename(fPath + ".part", fPath); err != nil {
 		return err
 	}
 
