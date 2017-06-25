@@ -36,7 +36,7 @@ func saveFile(r io.Reader, fPath string) error {
 		return err
 	}
 
-	if err = os.Rename(fPath + ".part", fPath); err != nil {
+	if err = os.Rename(fPath+".part", fPath); err != nil {
 		return err
 	}
 
@@ -59,7 +59,7 @@ func Avatar(uid, hash string) {
 			continue
 		}
 
-		if err := saveFile(r.Body, path); err != nil {
+		if err := saveFile(r.Body, "avatars/"+path); err != nil {
 			log.Println("failed to save", path+":", err)
 		} else {
 			break

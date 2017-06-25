@@ -29,23 +29,22 @@ var (
 )
 
 func do(d *discordgo.Session, event *discordgo.Ready) {
+	guilds := map[string]bool{}
 	channels := wantedChannels(d)
 
 	for _, c := range channels {
 		last := "0"
 		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
 
-		if len(c.PermissionOverwrites) != 0 {
-			log.Printf("[%s] permission overwrites:", c.ID)
-			for _, o := range c.PermissionOverwrites {
-				log.Printf("\t%v", *o)
-			}
-		}
-
-		continue
 		if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
 			log.Printf("[%s] creating the guild dir (%s) failed", c.ID, c.GuildID)
 			continue
+		}
+
+		if !guilds[c.GuildID] {
+			guilds[c.GuildID] = true
+			//go logpull.Guild(d, c.GuildID)
+			logpull.Guild(d, c.GuildID)
 		}
 
 		if _, err := os.Stat(filename); err == nil {

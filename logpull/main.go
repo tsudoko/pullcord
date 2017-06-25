@@ -12,18 +12,75 @@ import (
 	"github.com/tsudoko/pullcord/logformat"
 )
 
-func Channel(d *discordgo.Session, gid, id, after string) {
-	filename := fmt.Sprintf("channels/%s/%s.tsv", gid, id)
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0644)
+func Guild(d *discordgo.Session, id string) {
+	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Printf("[%s] error opening the log file: %v", id, err)
 		return
 	}
+	defer f.Close()
+
+	guild, err := d.Guild(id)
+	if err != nil {
+		log.Printf("[%s] error getting guild info: %v", id, err)
+		//goto members
+	}
+
+	logformat.Write(f, logentry.Guild("add", guild))
+
+	for _, c := range guild.Channels {
+		logformat.Write(f, logentry.Channel("add", c))
+
+		for _, o := range c.PermissionOverwrites {
+			logformat.Write(f, logentry.PermOverwrite("add", o))
+		}
+	}
+
+	for _, r := range guild.Roles {
+		logformat.Write(f, logentry.Role("add", r))
+	}
+
+	for _, e := range guild.Emojis {
+		logformat.Write(f, logentry.Emoji("add", e))
+	}
+
+	after := "0"
+	for {
+		members, err := d.GuildMembers(id, after, 1000)
+		if err != nil {
+			log.Printf("[%s] error getting members from %s: %v", id, after, err)
+			continue
+		}
+
+		if len(members) == 0 {
+			break
+		}
+
+		for _, m := range members {
+			after = m.User.ID
+			logformat.Write(f, logentry.User("add", m))
+
+			for _, rid := range m.Roles {
+				logformat.Write(f, logentry.RoleAssign("add", m.User.ID, rid))
+			}
+		}
+	}
+}
+
+func Channel(d *discordgo.Session, gid, id, after string) {
+	filename := fmt.Sprintf("channels/%s/%s.tsv", gid, id)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("[%s/%s] error opening the log file: %v", gid, id, err)
+		return
+	}
+	defer f.Close()
 
 	for {
 		msgs, err := d.ChannelMessages(id, 100, "", after, "")
 		if err != nil {
-			log.Printf("[%s] error getting messages from %s: %v", id, after, err)
+			log.Printf("[%s/%s] error getting messages from %s: %v", gid, id, after, err)
 		}
 
 		if len(msgs) == 0 {
@@ -47,7 +104,7 @@ func Channel(d *discordgo.Session, gid, id, after string) {
 			for _, r := range msgs[i].Reactions {
 				users, err := d.MessageReactions(id, msgs[i].ID, r.Emoji.APIName(), 100)
 				if err != nil {
-					log.Printf("[%s] error getting users for reaction %s to %s: %v", id, r.Emoji.APIName(), msgs[i].ID, err)
+					log.Printf("[%s/%s] error getting users for reaction %s to %s: %v", gid, id, r.Emoji.APIName(), msgs[i].ID, err)
 				}
 
 				for _, u := range users {
@@ -74,10 +131,6 @@ func Channel(d *discordgo.Session, gid, id, after string) {
 			}
 		}
 
-		log.Printf("[%s] downloaded %d messages, last id: %s with content %s", id, len(msgs), msgs[0].ID, msgs[0].Content)
+		log.Printf("[%s/%s] downloaded %d messages, last id: %s with content %s", gid, id, len(msgs), msgs[0].ID, msgs[0].Content)
 	}
-}
-
-func Guild(d *discordgo.Session, id string) {
-
 }

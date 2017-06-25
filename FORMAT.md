@@ -70,7 +70,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `guild`
 
-    action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid,mfalevel
+    action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid
 
  - `name` (required)
  - `ownerid` (required)
@@ -89,8 +89,9 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `role`
 
-    action,type,id,color,hoist,pos,perms
+    action,type,id,name,color,pos,perms,hoist
 
+ - `name` (required)
  - `color` (required)
  - `hoist` (boolean) - if this role is pinned in the user listing
  - `pos` (required)
@@ -121,7 +122,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `emoji`
 
-    action,type,id,name,colons
+    action,type,id,name,nocolons
 
  - `name` (required)
- - `colons` (boolean)
+ - `nocolons` (boolean)
