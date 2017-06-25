@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -32,13 +33,20 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 	for _, c := range channels {
 		last := "0"
+		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
 
-		if err := os.MkdirAll("channels/"+c.GuildID, os.ModeDir|0755); err != nil {
-			log.Printf("creating the guild dir for %s failed", c.GuildID)
-			continue
+		if len(c.PermissionOverwrites) != 0 {
+			log.Printf("[%s] permission overwrites:", c.ID)
+			for _, o := range c.PermissionOverwrites {
+				log.Printf("\t%v", *o)
+			}
 		}
 
-		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
+		continue
+		if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
+			log.Printf("[%s] creating the guild dir (%s) failed", c.ID, c.GuildID)
+			continue
+		}
 
 		if _, err := os.Stat(filename); err == nil {
 			last, err = logutil.LastMessageID(filename)
