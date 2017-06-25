@@ -4,6 +4,7 @@ package logentry
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -32,11 +33,11 @@ func Message(op string, m *discordgo.Message) []string {
 }
 
 func Attachment(op string, messageID string, a *discordgo.MessageAttachment) []string {
-	return []string{op, "attachment", messageID, a.ID}
+	return []string{op, "attachment", a.ID, messageID}
 }
 
 func Reaction(op string, r *discordgo.MessageReaction) []string {
-	return []string{op, "reaction", r.MessageID, r.UserID, r.Emoji.APIName()}
+	return []string{op, "reaction", r.UserID, r.MessageID, r.Emoji.APIName()}
 }
 
 func Embed(op string, messageID string, e *discordgo.MessageEmbed) []string {
@@ -74,7 +75,14 @@ func User(op string, m *discordgo.Member) []string {
 		name = m.User.Username
 	}
 
-	return []string{op, "user", m.User.ID, name, m.User.Avatar}
+	return []string{
+		op,
+		"user",
+		m.User.ID,
+		name,
+		m.User.Avatar,
+		strings.Join(m.Roles, ","),
+	}
 }
 
 func Role(op string, r *discordgo.Role) []string {
@@ -88,10 +96,6 @@ func Role(op string, r *discordgo.Role) []string {
 		strconv.Itoa(r.Permissions),
 		formatBool("hoist", r.Hoist),
 	}
-}
-
-func RoleAssign(op string, uid, rid string) []string {
-	return []string{op, "roleassign", uid, rid}
 }
 
 func Channel(op string, c *discordgo.Channel) []string {

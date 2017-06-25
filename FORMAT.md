@@ -20,9 +20,10 @@ All common fields are required. Unless specified otherwise, other fields can be
 empty. Boolean fields contain their name if the value is true or are empty if
 it's false.
 
-`Action` can be one of `add`, `edit`, `del`. `Type` corresponds to the Discord
-type, such as `message` or `reaction`. `Id` is the ID of the object or the
-subject of the action, depending on the entry type.
+`Action` is `add` or `del`. `Type` corresponds to the Discord type, such as
+`message` or `reaction`. `Id` is the ID of the object of the action. If an
+object has been `add`ed previously and a new `add` entry with the same ID
+appears, it's considered an update to the existing object.
 
 [TSV]: https://en.wikipedia.org/wiki/Tab-separated_values
 
@@ -40,17 +41,17 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `attachment`
 
-    action,type,messageid,id
+    action,type,id,messageid
 
- - `messageid` (required)
  - `id` (required)
+ - `messageid` (required)
 
 ### `reaction`
 
-    action,type,messageid,userid,emoji
+    action,type,userid,messageid,emoji
 
- - `messageid` (required)
  - `userid` - can be empty if there are more than 100 reactions with a given emoji
+ - `messageid` (required)
  - `emoji` (required) - character or `<emojiname>:<emojiid>`
 
 ### `embed`
@@ -78,7 +79,9 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `user`
 
-    action,type,id,name,avatar
+    action,type,id,name,avatar,roles
+
+ - `roles` - comma-separated role IDs
 
 ### `ban`
 
@@ -96,13 +99,6 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
  - `hoist` (boolean) - if this role is pinned in the user listing
  - `pos` (required)
  - `perms` (required)
-
-### `roleassign`
-
-    action,type,userid,roleid
-
- - `userid` (required)
- - `roleid` (required)
 
 ### `channel`
 

@@ -60,10 +60,6 @@ func Guild(d *discordgo.Session, id string) {
 		for _, m := range members {
 			after = m.User.ID
 			logformat.Write(f, logentry.User("add", m))
-
-			for _, rid := range m.Roles {
-				logformat.Write(f, logentry.RoleAssign("add", m.User.ID, rid))
-			}
 		}
 	}
 }
