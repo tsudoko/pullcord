@@ -1,3 +1,4 @@
+// Package logformat provides a simple interface to read and write log entries.
 package logformat
 
 import (

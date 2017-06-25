@@ -1,3 +1,4 @@
+// Package logentry describes the format of log entries.
 package logentry
 
 import (
