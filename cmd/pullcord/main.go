@@ -23,8 +23,6 @@ var (
 	xgid = flag.String("S", "", "comma-separated server IDs to exclude")
 
 	cids, gids, xcids, xgids map[string]bool
-
-	continuous = flag.Bool("continuous", false, "keep archiving in background after fetching the whole history")
 )
 
 func do(d *discordgo.Session, event *discordgo.Ready) {
