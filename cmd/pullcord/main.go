@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -10,6 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/tsudoko/pullcord/logpull"
+	"github.com/tsudoko/pullcord/logutil"
 )
 
 var (
@@ -29,15 +31,26 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 	channels := wantedChannels(d)
 
 	for _, c := range channels {
-		log.Printf("going to archive %s/#%s", c.GuildID, c.Name)
+		last := "0"
 
-		if err := os.MkdirAll("channels/" + c.GuildID, os.ModeDir|0755); err != nil {
+		if err := os.MkdirAll("channels/"+c.GuildID, os.ModeDir|0755); err != nil {
 			log.Printf("creating the guild dir for %s failed", c.GuildID)
 			continue
 		}
 
+		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
+
+		if _, err := os.Stat(filename); err == nil {
+			last, err = logutil.LastMessageID(filename)
+			if err != nil {
+				log.Printf("[%s] error getting last message id, cancelling: %v", c.ID, err)
+				continue
+			}
+		}
+
+		log.Printf("[%s] last downloaded message id: %s", c.ID, last)
 		//go logpull.Channel(d, c.GuildID, c.ID, "0")
-		logpull.Channel(d, c.GuildID, c.ID, "0")
+		logpull.Channel(d, c.GuildID, c.ID, last)
 	}
 
 	os.Exit(0)

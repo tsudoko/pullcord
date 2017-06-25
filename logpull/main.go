@@ -13,9 +13,10 @@ import (
 )
 
 func Channel(d *discordgo.Session, gid, id, after string) {
-	f, err := os.Create(fmt.Sprintf("channels/%s/%s.tsv", gid, id))
+	filename := fmt.Sprintf("channels/%s/%s.tsv", gid, id)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		log.Printf("[%s] error creating log file: %v", id, err)
+		log.Printf("[%s] error opening the log file: %v", id, err)
 		return
 	}
 
