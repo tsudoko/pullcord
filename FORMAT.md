@@ -89,9 +89,10 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `role`
 
-    action,type,id,color,pos,perms
+    action,type,id,color,hoist,pos,perms
 
  - `color` (required)
+ - `hoist` (boolean) - if this role is pinned in the user listing
  - `pos` (required)
  - `perms` (required)
 
@@ -110,7 +111,13 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
  - `pos` (required)
  - `name` (required)
 
-TODO: permission overwrites
+### `permoverwrite`
+
+    action,type,id,overwritetype,allow,deny
+
+ - `overwritetype` (required)
+ - `allow` (required)
+ - `deny` (required)
 
 ### `emoji`
 
