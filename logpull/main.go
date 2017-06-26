@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
+	"github.com/tsudoko/pullcord/cdndl"
 	"github.com/tsudoko/pullcord/logentry"
 	"github.com/tsudoko/pullcord/logformat"
 )
@@ -27,6 +28,10 @@ func Guild(d *discordgo.Session, id string) {
 		//goto members
 	}
 
+	if guild.Icon != "" {
+		cdndl.Icon(id, guild.Icon)
+	}
+
 	logformat.Write(f, logentry.Guild("add", guild))
 
 	for _, c := range guild.Channels {
@@ -42,6 +47,8 @@ func Guild(d *discordgo.Session, id string) {
 	}
 
 	for _, e := range guild.Emojis {
+		log.Printf("[%s] downloading emoji %s", id, e.ID)
+		cdndl.Emoji(e.ID)
 		logformat.Write(f, logentry.Emoji("add", e))
 	}
 
@@ -59,6 +66,11 @@ func Guild(d *discordgo.Session, id string) {
 
 		for _, m := range members {
 			after = m.User.ID
+
+			if m.User.Avatar != "" {
+				cdndl.Avatar(m.User.ID, m.User.Avatar)
+			}
+
 			logformat.Write(f, logentry.User("add", m))
 		}
 	}
@@ -94,6 +106,8 @@ func Channel(d *discordgo.Session, gid, id, after string) {
 			}
 
 			for _, a := range msgs[i].Attachments {
+				log.Printf("[%s/%s] downloading attachment %s", gid, id, a.ID)
+				cdndl.Attachment(a.URL)
 				logformat.Write(f, logentry.Attachment("add", msgs[i].ID, a))
 			}
 
