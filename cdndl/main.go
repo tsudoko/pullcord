@@ -13,6 +13,8 @@ import (
 const (
 	cdnUrl     = "https://cdn.discordapp.com"
 	avatarPath = "/avatars"
+	emojiPath  = "/emojis"
+	iconPath   = "/icons"
 )
 
 var avatarFormats = []string{
@@ -64,6 +66,44 @@ func Avatar(uid, hash string) {
 		} else {
 			break
 		}
+	}
+}
+
+func Emoji(id string) {
+	url := cdnUrl + emojiPath
+	path := fmt.Sprintf("%s.png", id)
+
+	r, err := http.Get(url + "/" + path)
+	if err != nil {
+		log.Println("failed to get", url+"/"+path+":", err)
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode != 200 {
+		log.Println("non-200 status code for", url+":", err)
+	}
+
+	if err = saveFile(r.Body, "emojis/"+path); err != nil {
+		log.Println("failed to save", path+":", err)
+	}
+}
+
+func Icon(gid, hash string) {
+	url := cdnUrl + iconPath
+	path := fmt.Sprintf("%s/%s.png", gid, hash)
+
+	r, err := http.Get(url + "/" + path)
+	if err != nil {
+		log.Println("failed to get", url+"/"+path+":", err)
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode != 200 {
+		log.Println("non-200 status code for", url+":", err)
+	}
+
+	if err = saveFile(r.Body, "icons/"+path); err != nil {
+		log.Println("failed to save", path+":", err)
 	}
 }
 
