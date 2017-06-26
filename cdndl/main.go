@@ -24,6 +24,11 @@ var avatarFormats = []string{
 }
 
 func saveFile(r io.Reader, fPath string) error {
+	if _, err := os.Stat(fPath); err == nil {
+		// TODO: avoid making the HTTP request in the first place
+		return nil
+	}
+
 	if err := os.MkdirAll(path.Dir(fPath), os.ModeDir|0755); err != nil {
 		return err
 	}
