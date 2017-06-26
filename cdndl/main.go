@@ -83,7 +83,7 @@ func Attachment(URL string) {
 		log.Println("non-200 status code for", URL+":", err)
 	}
 
-	if err = saveFile(r.Body, u.Path); err != nil {
+	if err = saveFile(r.Body, u.Path[1:]); err != nil {
 		log.Println("failed to save", u.Path+":", err)
 	}
 }
