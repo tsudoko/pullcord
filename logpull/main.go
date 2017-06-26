@@ -29,7 +29,10 @@ func Guild(d *discordgo.Session, id string) {
 	}
 
 	if guild.Icon != "" {
-		cdndl.Icon(id, guild.Icon)
+		err := cdndl.Icon(id, guild.Icon)
+		if err != nil {
+			log.Printf("[%s] error downloading the guild icon: %v", id, err)
+		}
 	}
 
 	logformat.Write(f, logentry.Guild("add", guild))
@@ -47,8 +50,10 @@ func Guild(d *discordgo.Session, id string) {
 	}
 
 	for _, e := range guild.Emojis {
-		log.Printf("[%s] downloading emoji %s", id, e.ID)
-		cdndl.Emoji(e.ID)
+		err := cdndl.Emoji(e.ID)
+		if err != nil {
+			log.Printf("[%s] error downloading emoji %s: %v", id, e.ID, err)
+		}
 		logformat.Write(f, logentry.Emoji("add", e))
 	}
 
@@ -68,7 +73,10 @@ func Guild(d *discordgo.Session, id string) {
 			after = m.User.ID
 
 			if m.User.Avatar != "" {
-				cdndl.Avatar(m.User.ID, m.User.Avatar)
+				err := cdndl.Avatar(m.User.ID, m.User.Avatar)
+				if err != nil {
+					log.Printf("[%s] error downloading avatar for user %s: %v", id, m.User.ID, err)
+				}
 			}
 
 			logformat.Write(f, logentry.User("add", m))
@@ -107,7 +115,10 @@ func Channel(d *discordgo.Session, gid, id, after string) {
 
 			for _, a := range msgs[i].Attachments {
 				log.Printf("[%s/%s] downloading attachment %s", gid, id, a.ID)
-				cdndl.Attachment(a.URL)
+				err := cdndl.Attachment(a.URL)
+				if err != nil {
+					log.Printf("[%s/%s] error downloading attachment %s: %v", gid, id, a.ID, err)
+				}
 				logformat.Write(f, logentry.Attachment("add", msgs[i].ID, a))
 			}
 
