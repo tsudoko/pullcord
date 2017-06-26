@@ -37,26 +37,24 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
 
 		if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
-			log.Printf("[%s] creating the guild dir (%s) failed", c.ID, c.GuildID)
+			log.Printf("[%s/%s] creating the guild dir failed", c.GuildID, c.ID)
 			continue
 		}
 
 		if !guilds[c.GuildID] {
 			guilds[c.GuildID] = true
-			//go logpull.Guild(d, c.GuildID)
 			logpull.Guild(d, c.GuildID)
 		}
 
 		if _, err := os.Stat(filename); err == nil {
 			last, err = logutil.LastMessageID(filename)
 			if err != nil {
-				log.Printf("[%s] error getting last message id, cancelling: %v", c.ID, err)
+				log.Printf("[%s/%s] error getting last message id, cancelling: %v", c.GuildID, c.ID, err)
 				continue
 			}
 		}
 
-		log.Printf("[%s] last downloaded message id: %s", c.ID, last)
-		//go logpull.Channel(d, c.GuildID, c.ID, "0")
+		log.Printf("[%s/%s] last downloaded message id: %s", c.GuildID, c.ID, last)
 		logpull.Channel(d, c.GuildID, c.ID, last)
 	}
 
