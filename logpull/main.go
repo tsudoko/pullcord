@@ -35,6 +35,13 @@ func Guild(d *discordgo.Session, id string) {
 		}
 	}
 
+	if guild.Splash != "" {
+		err := cdndl.Splash(id, guild.Splash)
+		if err != nil {
+			log.Printf("[%s] error downloading the guild splash: %v", id, err)
+		}
+	}
+
 	logformat.Write(f, logentry.Guild("add", guild))
 
 	for _, c := range guild.Channels {

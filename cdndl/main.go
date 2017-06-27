@@ -15,6 +15,7 @@ const (
 	avatarPath = "/avatars"
 	emojiPath  = "/emojis"
 	iconPath   = "/icons"
+	splashPath = "/splashes"
 )
 
 // Returned when the request gets a non-200 HTTP response.
@@ -77,7 +78,7 @@ func saveFile(r io.Reader, fPath string) error {
 
 func Avatar(uid, hash string) error {
 	for _, ext := range avatarFormats {
-		url := fmt.Sprintf("%s/%s/%s.%s", cdnUrl + avatarPath, uid, hash, ext)
+		url := fmt.Sprintf("%s/%s/%s.%s", cdnUrl+avatarPath, uid, hash, ext)
 		err := absDL(url)
 		if notOk, ok := err.(ErrNotOk); ok && notOk.StatusCode == 415 {
 			continue
@@ -92,12 +93,17 @@ func Avatar(uid, hash string) error {
 }
 
 func Emoji(id string) error {
-	url := fmt.Sprintf("%s/%s.png", cdnUrl + emojiPath, id)
+	url := fmt.Sprintf("%s/%s.png", cdnUrl+emojiPath, id)
 	return absDL(url)
 }
 
 func Icon(gid, hash string) error {
-	url := fmt.Sprintf("%s/%s/%s.png", cdnUrl + iconPath, gid, hash)
+	url := fmt.Sprintf("%s/%s/%s.png", cdnUrl+iconPath, gid, hash)
+	return absDL(url)
+}
+
+func Splash(gid, hash string) error {
+	url := fmt.Sprintf("%s/%s/%s.png?size=2048", cdnUrl+splashPath, gid, hash)
 	return absDL(url)
 }
 
