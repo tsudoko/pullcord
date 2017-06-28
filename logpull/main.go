@@ -11,9 +11,10 @@ import (
 	"github.com/tsudoko/pullcord/cdndl"
 	"github.com/tsudoko/pullcord/logentry"
 	"github.com/tsudoko/pullcord/logformat"
+	"github.com/tsudoko/pullcord/logutil"
 )
 
-func Guild(d *discordgo.Session, id string) {
+func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string) {
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -42,18 +43,30 @@ func Guild(d *discordgo.Session, id string) {
 		}
 	}
 
-	logformat.Write(f, logentry.Guild("add", guild))
+	gEntry := logentry.Guild("add", guild)
+	if !logutil.Equals(cache["guild"][id], gEntry) {
+		logformat.Write(f, gEntry)
+	}
 
 	for _, c := range guild.Channels {
-		logformat.Write(f, logentry.Channel("add", c))
+		cEntry := logentry.Channel("add", c)
+		if !logutil.Equals(cache["channel"][c.ID], cEntry) {
+			logformat.Write(f, cEntry)
+		}
 
 		for _, o := range c.PermissionOverwrites {
-			logformat.Write(f, logentry.PermOverwrite("add", o))
+			oEntry := logentry.PermOverwrite("add", o)
+			if !logutil.Equals(cache["permoverwrite"][o.ID], oEntry) {
+				logformat.Write(f, oEntry)
+			}
 		}
 	}
 
 	for _, r := range guild.Roles {
-		logformat.Write(f, logentry.Role("add", r))
+		rEntry := logentry.Role("add", r)
+		if !logutil.Equals(cache["role"][r.ID], rEntry) {
+			logformat.Write(f, rEntry)
+		}
 	}
 
 	for _, e := range guild.Emojis {
@@ -61,7 +74,10 @@ func Guild(d *discordgo.Session, id string) {
 		if err != nil {
 			log.Printf("[%s] error downloading emoji %s: %v", id, e.ID, err)
 		}
-		logformat.Write(f, logentry.Emoji("add", e))
+		eEntry := logentry.Emoji("add", e)
+		if !logutil.Equals(cache["emoji"][e.ID], eEntry) {
+			logformat.Write(f, eEntry)
+		}
 	}
 
 	after := "0"
@@ -86,7 +102,10 @@ func Guild(d *discordgo.Session, id string) {
 				}
 			}
 
-			logformat.Write(f, logentry.User("add", m))
+			uEntry := logentry.User("add", m)
+			if !logutil.Equals(cache["user"][m.User.ID], uEntry) {
+				logformat.Write(f, uEntry)
+			}
 		}
 	}
 }

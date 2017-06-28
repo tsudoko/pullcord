@@ -35,6 +35,7 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 	for _, c := range channels {
 		last := "0"
 		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
+		guildFilename := fmt.Sprintf("channels/%s/guild.tsv", c.GuildID)
 
 		if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
 			log.Printf("[%s/%s] creating the guild dir failed", c.GuildID, c.ID)
@@ -43,7 +44,14 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 		if !guilds[c.GuildID] {
 			guilds[c.GuildID] = true
-			logpull.Guild(d, c.GuildID)
+			cache := make(map[string]map[string][]string)
+			if _, err := os.Stat(guildFilename); err == nil {
+				if err := logutil.GuildCache(guildFilename, &cache); err != nil {
+					log.Printf("[%s] error reconstructing guild state, cancelling: %v", c.GuildID, err)
+					continue
+				}
+			}
+			logpull.Guild(d, c.GuildID, cache)
 		}
 
 		if _, err := os.Stat(filename); err == nil {
