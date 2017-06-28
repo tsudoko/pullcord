@@ -47,7 +47,7 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 			cache := make(map[string]map[string][]string)
 			if _, err := os.Stat(guildFilename); err == nil {
 				if err := logutil.GuildCache(guildFilename, &cache); err != nil {
-					log.Printf("[%s] error reconstructing guild state, cancelling: %v", c.GuildID, err)
+					log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
 					continue
 				}
 			}
@@ -57,12 +57,12 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 		if _, err := os.Stat(filename); err == nil {
 			last, err = logutil.LastMessageID(filename)
 			if err != nil {
-				log.Printf("[%s/%s] error getting last message id, cancelling: %v", c.GuildID, c.ID, err)
+				log.Printf("[%s/%s] error getting last message id, skipping (%v)", c.GuildID, c.ID, err)
 				continue
 			}
 		}
 
-		log.Printf("[%s/%s] last downloaded message id: %s", c.GuildID, c.ID, last)
+		//log.Printf("[%s/%s] last downloaded message id: %s", c.GuildID, c.ID, last)
 		logpull.Channel(d, c.GuildID, c.ID, last)
 	}
 

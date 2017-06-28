@@ -107,6 +107,8 @@ func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string
 				logformat.Write(f, uEntry)
 			}
 		}
+
+		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
 	}
 }
 
@@ -178,6 +180,6 @@ func Channel(d *discordgo.Session, gid, id, after string) {
 			}
 		}
 
-		log.Printf("[%s/%s] downloaded %d messages, last id: %s with content %s", gid, id, len(msgs), msgs[0].ID, msgs[0].Content)
+		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", gid, id, len(msgs), msgs[0].ID, msgs[0].Content)
 	}
 }
