@@ -26,26 +26,25 @@ func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string
 	guild, err := d.Guild(id)
 	if err != nil {
 		log.Printf("[%s] error getting guild info: %v", id, err)
-		//goto members
-	}
-
-	if guild.Icon != "" {
-		err := cdndl.Icon(id, guild.Icon)
-		if err != nil {
-			log.Printf("[%s] error downloading the guild icon: %v", id, err)
+	} else {
+		if guild.Icon != "" {
+			err := cdndl.Icon(id, guild.Icon)
+			if err != nil {
+				log.Printf("[%s] error downloading the guild icon: %v", id, err)
+			}
 		}
-	}
 
-	if guild.Splash != "" {
-		err := cdndl.Splash(id, guild.Splash)
-		if err != nil {
-			log.Printf("[%s] error downloading the guild splash: %v", id, err)
+		if guild.Splash != "" {
+			err := cdndl.Splash(id, guild.Splash)
+			if err != nil {
+				log.Printf("[%s] error downloading the guild splash: %v", id, err)
+			}
 		}
-	}
 
-	gEntry := logentry.Guild("add", guild)
-	if !logutil.Equals(cache["guild"][id], gEntry) {
-		logformat.Write(f, gEntry)
+		gEntry := logentry.Guild("add", guild)
+		if !logutil.Equals(cache["guild"][id], gEntry) {
+			logformat.Write(f, gEntry)
+		}
 	}
 
 	for _, c := range guild.Channels {
