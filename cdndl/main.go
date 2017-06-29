@@ -11,6 +11,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const maxSize = "2048"
+
 // Returned when the request gets a non-200 HTTP response.
 type ErrNotOk struct {
 	error
@@ -71,19 +73,19 @@ func saveFile(r io.Reader, fPath string) error {
 }
 
 func Avatar(u *discordgo.User) error {
-	return absDL(u.AvatarURL("2048"))
+	return absDL(u.AvatarURL(maxSize))
 }
 
 func Emoji(id string) error {
-	return absDL(EndpointCDNEmojis + id + ".png")
+	return absDL(EndpointCDNEmojis + id + ".png" + "?size=" + maxSize)
 }
 
 func Icon(gid, hash string) error {
-	return absDL(discordgo.EndpointGuildIcon(gid, hash))
+	return absDL(discordgo.EndpointGuildIcon(gid, hash) + "?size=" + maxSize)
 }
 
 func Splash(gid, hash string) error {
-	return absDL(discordgo.EndpointGuildSplash(gid, hash) + "?size=2048")
+	return absDL(discordgo.EndpointGuildSplash(gid, hash) + "?size=" + maxSize)
 }
 
 func Attachment(url string) error {
