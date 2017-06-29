@@ -48,7 +48,7 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 	pullChannel(d, c.GuildID, c.ID, last)
 }
 
-func pullGuild(d *discordgo.Session, id string, cache map[string]map[string][]string) {
+func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -76,30 +76,22 @@ func pullGuild(d *discordgo.Session, id string, cache map[string]map[string][]st
 		}
 
 		gEntry := logentry.Guild("history", "add", guild)
-		if !logutil.Equals(cache["guild"][id], gEntry) {
-			logformat.Write(f, gEntry)
-		}
+		logutil.WriteNew(f, gEntry, &cache)
 	}
 
 	for _, c := range guild.Channels {
 		cEntry := logentry.Channel("history", "add", c)
-		if !logutil.Equals(cache["channel"][c.ID], cEntry) {
-			logformat.Write(f, cEntry)
-		}
+		logutil.WriteNew(f, cEntry, &cache)
 
 		for _, o := range c.PermissionOverwrites {
 			oEntry := logentry.PermOverwrite("history", "add", o)
-			if !logutil.Equals(cache["permoverwrite"][o.ID], oEntry) {
-				logformat.Write(f, oEntry)
-			}
+			logutil.WriteNew(f, oEntry, &cache)
 		}
 	}
 
 	for _, r := range guild.Roles {
 		rEntry := logentry.Role("history", "add", r)
-		if !logutil.Equals(cache["role"][r.ID], rEntry) {
-			logformat.Write(f, rEntry)
-		}
+		logutil.WriteNew(f, rEntry, &cache)
 	}
 
 	for _, e := range guild.Emojis {
@@ -108,9 +100,7 @@ func pullGuild(d *discordgo.Session, id string, cache map[string]map[string][]st
 			log.Printf("[%s] error downloading emoji %s: %v", id, e.ID, err)
 		}
 		eEntry := logentry.Emoji("history", "add", e)
-		if !logutil.Equals(cache["emoji"][e.ID], eEntry) {
-			logformat.Write(f, eEntry)
-		}
+		logutil.WriteNew(f, eEntry, &cache)
 	}
 
 	after := "0"
@@ -136,9 +126,7 @@ func pullGuild(d *discordgo.Session, id string, cache map[string]map[string][]st
 			}
 
 			uEntry := logentry.User("history", "add", m)
-			if !logutil.Equals(cache["user"][m.User.ID], uEntry) {
-				logformat.Write(f, uEntry)
-			}
+			logutil.WriteNew(f, uEntry, &cache)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)

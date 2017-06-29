@@ -2,12 +2,27 @@ package logutil
 
 import (
 	"bufio"
+	"io"
 	"os"
 
 	"github.com/tsudoko/pullcord/logformat"
 )
 
+const (
+	hTime = iota
+	hFetchType
+	hOp
+	hType
+	hID
+)
+
 type EntryCache map[string]map[string][]string
+
+func WriteNew(w io.Writer, e []string, cache *EntryCache) {
+	if !Equals((*cache)[e[hType]][e[hID]], e[1:]) {
+		logformat.Write(w, e)
+	}
+}
 
 func Equals(a, b []string) bool {
 	if len(a) != len(b) {
@@ -32,19 +47,18 @@ func GuildCache(fpath string, cache *EntryCache) (err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		entry := logformat.Read(scanner)
-		switch entry[0] {
+		switch entry[hOp] {
 		case "add":
-			if (*cache)[entry[1]] == nil {
-				(*cache)[entry[1]] = make(map[string][]string)
+			if (*cache)[entry[hType]] == nil {
+				(*cache)[entry[hType]] = make(map[string][]string)
 			}
-			(*cache)[entry[1]][entry[2]] = entry
+			(*cache)[entry[hType]][entry[hID]] = entry[1:]
 		case "del":
-			delete((*cache)[entry[1]], entry[2])
+			delete((*cache)[entry[hType]], entry[hID])
 		}
 	}
 
 	err = scanner.Err()
-
 	return
 }
 
@@ -57,12 +71,11 @@ func LastMessageID(fpath string) (id string, err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		entry := logformat.Read(scanner)
-		if entry[0] == "add" && entry[1] == "message" {
-			id = entry[2]
+		if entry[hOp] == "add" && entry[hType] == "message" {
+			id = entry[hID]
 		}
 	}
 
 	err = scanner.Err()
-
 	return
 }
