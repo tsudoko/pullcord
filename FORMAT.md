@@ -14,16 +14,22 @@ separate entry.
 
 Fields common for all entries:
 
-    action,type,id
+    time,fetchtype,action,type,id
 
 All common fields are required. Unless specified otherwise, other fields can be
 empty. Boolean fields contain their name if the value is true or are empty if
 it's false.
 
-`Action` is `add` or `del`. `Type` corresponds to the Discord type, such as
-`message` or `reaction`. `Id` is the ID of the object of the action. If an
-object has been `add`ed previously and a new `add` entry with the same ID
-appears, it's considered an update to the existing object.
+`Time` is the entry creation time. `Fetchtype` describes if the entry has been
+retrieved from the history (`history`) or written as soon as the event it
+describes had happened (`realtime`). `Action` is `add` or `del`. `Type`
+corresponds to the Discord type, such as `message` or `reaction`. `Id` is the
+ID of the object of the action.
+
+If an object has been `add`ed previously and a new `add` entry with the same ID
+appears, it's considered an update to the existing object. `Del` for an object
+that hasn't been `add`ed at any time means the object had existed in the past,
+but it wasn't present at the time of fetching.
 
 [TSV]: https://en.wikipedia.org/wiki/Tab-separated_values
 
@@ -31,17 +37,17 @@ appears, it's considered an update to the existing object.
 
 ### `message`
 
-    action,type,id,authorid,editedtime,tts,content
+    time,fetchtype,action,type,id,authorid,editedtime,tts,content
 
  - `authorid` (required)
- - `editedtime` - ISO 8601 timestamp (µs) of last edit or deletion
+ - `editedtime` - ISO 8601 timestamp (µs) of last edit
  - `tts` (boolean)
 
 Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `attachment`
 
-    action,type,id,messageid
+    time,fetchtype,action,type,id,messageid
 
  - `id` (required)
  - `messageid` (required)
@@ -71,7 +77,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `guild`
 
-    action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid
+    time,fetchtype,action,type,id,name,icon,splash,ownerid,afkchanid,afktimeout,embeddable,embedchanid
 
  - `name` (required)
  - `ownerid` (required)
@@ -79,7 +85,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `user`
 
-    action,type,id,name,nick,discriminator,avatar,roles
+    time,fetchtype,action,type,id,name,nick,discriminator,avatar,roles
 
  - `name` (required) - global name
  - `nick` - server nickname
@@ -94,7 +100,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `role`
 
-    action,type,id,name,color,pos,perms,hoist
+    time,fetchtype,action,type,id,name,color,pos,perms,hoist
 
  - `name` (required)
  - `color` (required)
@@ -104,7 +110,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `channel`
 
-    action,type,id,chantype,pos,name,topic
+    time,fetchtype,action,type,id,chantype,pos,name,topic
 
  - `chantype` (required) - `text` or `voice`
  - `pos` (required)
@@ -112,7 +118,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `permoverwrite`
 
-    action,type,id,overwritetype,allow,deny
+    time,fetchtype,action,type,id,overwritetype,allow,deny
 
  - `overwritetype` (required)
  - `allow` (required)
@@ -120,7 +126,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `emoji`
 
-    action,type,id,name,nocolons
+    time,fetchtype,action,type,id,name,nocolons
 
  - `name` (required)
  - `nocolons` (boolean)

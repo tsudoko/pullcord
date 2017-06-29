@@ -10,6 +10,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const timeFormat = "2006-01-02T15:04:05.000000-07:00"
+
 func formatBool(name string, variable bool) string {
 	if variable {
 		return name
@@ -18,39 +20,47 @@ func formatBool(name string, variable bool) string {
 	}
 }
 
-func Message(op string, m *discordgo.Message) []string {
-	var ts string
+func wrap(in []string) []string {
+	return append([]string{time.Now().Format(timeFormat)}, in...)
+}
 
-	// exact deletions can't be retrieved from audit logs or the history
-	// TODO: move to the outer handler?
-	if op == "del" {
-		ts = time.Now().Format("2006-01-02T15:04:05.000000-07:00")
-	} else if m.EditedTimestamp != "" {
-		ts = string(m.EditedTimestamp)
+func Message(ftype, op string, m *discordgo.Message) []string {
+	row := []string{
+		ftype,
+		op,
+		"message",
+		m.ID,
+		m.Author.ID,
+		string(m.EditedTimestamp),
+		formatBool("tts", m.Tts),
+		m.Content,
 	}
-
-	return []string{op, "message", m.ID, m.Author.ID, ts, formatBool("tts", m.Tts), m.Content}
+	return wrap(row)
 }
 
-func Attachment(op string, messageID string, a *discordgo.MessageAttachment) []string {
-	return []string{op, "attachment", a.ID, messageID}
+func Attachment(ftype, op string, messageID string, a *discordgo.MessageAttachment) []string {
+	row := []string{ftype, op, "attachment", a.ID, messageID}
+	return wrap(row)
 }
 
-func Reaction(op string, r *discordgo.MessageReaction) []string {
-	return []string{op, "reaction", r.UserID, r.MessageID, r.Emoji.APIName()}
+func Reaction(ftype, op string, r *discordgo.MessageReaction) []string {
+	row := []string{ftype, op, "reaction", r.UserID, r.MessageID, r.Emoji.APIName()}
+	return wrap(row)
 }
 
-func Embed(op string, messageID string, e *discordgo.MessageEmbed) []string {
+func Embed(ftype, op string, messageID string, e *discordgo.MessageEmbed) []string {
 	j, err := json.Marshal(e)
 	if err != nil {
 		panic(err)
 	}
 
-	return []string{op, "embed", messageID, string(j)}
+	row := []string{ftype, op, "embed", messageID, string(j)}
+	return wrap(row)
 }
 
-func Guild(op string, g *discordgo.Guild) []string {
-	return []string{
+func Guild(ftype, op string, g *discordgo.Guild) []string {
+	row := []string{
+		ftype,
 		op,
 		"guild",
 		g.ID,
@@ -62,12 +72,13 @@ func Guild(op string, g *discordgo.Guild) []string {
 		strconv.Itoa(g.AfkTimeout),
 		formatBool("embeddable", g.EmbedEnabled),
 		g.EmbedChannelID,
-		//g.MFALevel,
 	}
+	return wrap(row)
 }
 
-func User(op string, m *discordgo.Member) []string {
-	return []string{
+func User(ftype, op string, m *discordgo.Member) []string {
+	row := []string{
+		ftype,
 		op,
 		"user",
 		m.User.ID,
@@ -77,10 +88,12 @@ func User(op string, m *discordgo.Member) []string {
 		m.User.Avatar,
 		strings.Join(m.Roles, ","),
 	}
+	return wrap(row)
 }
 
-func Role(op string, r *discordgo.Role) []string {
-	return []string{
+func Role(ftype, op string, r *discordgo.Role) []string {
+	row := []string{
+		ftype,
 		op,
 		"role",
 		r.ID,
@@ -90,10 +103,12 @@ func Role(op string, r *discordgo.Role) []string {
 		strconv.Itoa(r.Permissions),
 		formatBool("hoist", r.Hoist),
 	}
+	return wrap(row)
 }
 
-func Channel(op string, c *discordgo.Channel) []string {
-	return []string{
+func Channel(ftype, op string, c *discordgo.Channel) []string {
+	row := []string{
+		ftype,
 		op,
 		"channel",
 		c.ID,
@@ -102,10 +117,12 @@ func Channel(op string, c *discordgo.Channel) []string {
 		c.Name,
 		c.Topic,
 	}
+	return wrap(row)
 }
 
-func PermOverwrite(op string, o *discordgo.PermissionOverwrite) []string {
-	return []string{
+func PermOverwrite(ftype, op string, o *discordgo.PermissionOverwrite) []string {
+	row := []string{
+		ftype,
 		op,
 		"permoverwrite",
 		o.ID,
@@ -113,14 +130,17 @@ func PermOverwrite(op string, o *discordgo.PermissionOverwrite) []string {
 		strconv.Itoa(o.Allow),
 		strconv.Itoa(o.Deny),
 	}
+	return wrap(row)
 }
 
-func Emoji(op string, e *discordgo.Emoji) []string {
-	return []string{
+func Emoji(ftype, op string, e *discordgo.Emoji) []string {
+	row := []string{
+		ftype,
 		op,
 		"emoji",
 		e.ID,
 		e.Name,
 		formatBool("nocolons", !e.RequireColons),
 	}
+	return wrap(row)
 }
