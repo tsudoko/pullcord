@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -14,7 +15,40 @@ import (
 	"github.com/tsudoko/pullcord/logutil"
 )
 
-func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string) {
+func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]bool) {
+	last := "0"
+	filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
+	guildFilename := fmt.Sprintf("channels/%s/guild.tsv", c.GuildID)
+
+	if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
+		log.Printf("[%s/%s] creating the guild dir failed", c.GuildID, c.ID)
+		return
+	}
+
+	if !(*fetchedGuilds)[c.GuildID] {
+		(*fetchedGuilds)[c.GuildID] = true
+		cache := make(logutil.EntryCache)
+		if _, err := os.Stat(guildFilename); err == nil {
+			if err := logutil.GuildCache(guildFilename, &cache); err != nil {
+				log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
+				return
+			}
+		}
+		pullGuild(d, c.GuildID, cache)
+	}
+
+	if _, err := os.Stat(filename); err == nil {
+		last, err = logutil.LastMessageID(filename)
+		if err != nil {
+			log.Printf("[%s/%s] error getting last message id, skipping (%v)", c.GuildID, c.ID, err)
+			return
+		}
+	}
+
+	pullChannel(d, c.GuildID, c.ID, last)
+}
+
+func pullGuild(d *discordgo.Session, id string, cache map[string]map[string][]string) {
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -111,7 +145,7 @@ func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string
 	}
 }
 
-func Channel(d *discordgo.Session, gid, id, after string) {
+func pullChannel(d *discordgo.Session, gid, id, after string) {
 	filename := fmt.Sprintf("channels/%s/%s.tsv", gid, id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {

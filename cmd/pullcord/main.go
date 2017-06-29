@@ -2,17 +2,14 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"path"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/tsudoko/pullcord/logpull"
-	"github.com/tsudoko/pullcord/logutil"
 )
 
 var (
@@ -28,42 +25,12 @@ var (
 	cids, gids, xcids, xgids map[string]bool
 )
 
-func do(d *discordgo.Session, event *discordgo.Ready) {
-	guilds := map[string]bool{}
+func do(d *discordgo.Session, _ *discordgo.Ready) {
+	fetchedGuilds := map[string]bool{}
 	channels := wantedChannels(d)
 
 	for _, c := range channels {
-		last := "0"
-		filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
-		guildFilename := fmt.Sprintf("channels/%s/guild.tsv", c.GuildID)
-
-		if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
-			log.Printf("[%s/%s] creating the guild dir failed", c.GuildID, c.ID)
-			continue
-		}
-
-		if !guilds[c.GuildID] {
-			guilds[c.GuildID] = true
-			cache := make(logutil.EntryCache)
-			if _, err := os.Stat(guildFilename); err == nil {
-				if err := logutil.GuildCache(guildFilename, &cache); err != nil {
-					log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
-					continue
-				}
-			}
-			logpull.Guild(d, c.GuildID, cache)
-		}
-
-		if _, err := os.Stat(filename); err == nil {
-			last, err = logutil.LastMessageID(filename)
-			if err != nil {
-				log.Printf("[%s/%s] error getting last message id, skipping (%v)", c.GuildID, c.ID, err)
-				continue
-			}
-		}
-
-		//log.Printf("[%s/%s] last downloaded message id: %s", c.GuildID, c.ID, last)
-		logpull.Channel(d, c.GuildID, c.ID, last)
+		logpull.Pull(d, c, &fetchedGuilds)
 	}
 
 	os.Exit(0)
