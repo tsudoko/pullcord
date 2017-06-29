@@ -95,7 +95,7 @@ func Guild(d *discordgo.Session, id string, cache map[string]map[string][]string
 			after = m.User.ID
 
 			if m.User.Avatar != "" {
-				err := cdndl.Avatar(m.User.ID, m.User.Avatar)
+				err := cdndl.Avatar(m.User)
 				if err != nil {
 					log.Printf("[%s] error downloading avatar for user %s: %v", id, m.User.ID, err)
 				}

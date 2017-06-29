@@ -2,7 +2,6 @@ package cdndl
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -20,8 +19,6 @@ type ErrNotOk struct {
 
 // discordgo uses EndpointAPI, which includes an extra "/api" path element
 var EndpointCDNEmojis = discordgo.EndpointCDN + "emojis/"
-
-var avatarFormats = []string{"gif", "png", "jpg"}
 
 func absDL(URL string) error {
 	u, err := url.Parse(URL)
@@ -73,20 +70,8 @@ func saveFile(r io.Reader, fPath string) error {
 	return nil
 }
 
-func Avatar(uid, hash string) error {
-	for _, ext := range avatarFormats {
-		url := fmt.Sprintf("%s%s/%s.%s", discordgo.EndpointCDNAvatars, uid, hash, ext)
-		err := absDL(url)
-		if notOk, ok := err.(ErrNotOk); ok && notOk.StatusCode == 415 {
-			continue
-		} else if err == nil {
-			break
-		} else {
-			return err
-		}
-	}
-
-	return nil
+func Avatar(u *discordgo.User) error {
+	return absDL(u.AvatarURL("2048"))
 }
 
 func Emoji(id string) error {
