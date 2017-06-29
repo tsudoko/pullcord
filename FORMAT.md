@@ -79,8 +79,10 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `user`
 
-    action,type,id,name,avatar,roles
+    action,type,id,name,nick,discriminator,avatar,roles
 
+ - `name` (required) - global name
+ - `nick` - server nickname
  - `roles` - comma-separated role IDs
 
 ### `ban`

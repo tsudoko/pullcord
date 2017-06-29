@@ -67,19 +67,13 @@ func Guild(op string, g *discordgo.Guild) []string {
 }
 
 func User(op string, m *discordgo.Member) []string {
-	var name string
-
-	if m.Nick != "" {
-		name = m.Nick
-	} else {
-		name = m.User.Username
-	}
-
 	return []string{
 		op,
 		"user",
 		m.User.ID,
-		name,
+		m.User.Username,
+		m.Nick,
+		m.User.Discriminator,
 		m.User.Avatar,
 		strings.Join(m.Roles, ","),
 	}
