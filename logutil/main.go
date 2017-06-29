@@ -7,6 +7,8 @@ import (
 	"github.com/tsudoko/pullcord/logformat"
 )
 
+type EntryCache map[string]map[string][]string
+
 func Equals(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -21,7 +23,7 @@ func Equals(a, b []string) bool {
 	return true
 }
 
-func GuildCache(fpath string, cache *map[string]map[string][]string) (err error) {
+func GuildCache(fpath string, cache *EntryCache) (err error) {
 	f, err := os.Open(fpath)
 	if err != nil {
 		return

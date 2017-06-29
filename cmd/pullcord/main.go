@@ -44,7 +44,7 @@ func do(d *discordgo.Session, event *discordgo.Ready) {
 
 		if !guilds[c.GuildID] {
 			guilds[c.GuildID] = true
-			cache := make(map[string]map[string][]string)
+			cache := make(logutil.EntryCache)
 			if _, err := os.Stat(guildFilename); err == nil {
 				if err := logutil.GuildCache(guildFilename, &cache); err != nil {
 					log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
