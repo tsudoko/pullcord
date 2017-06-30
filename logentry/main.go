@@ -12,6 +12,14 @@ import (
 
 const timeFormat = "2006-01-02T15:04:05.000000-07:00"
 
+const (
+	HTime = iota
+	HFetchType
+	HOp
+	HType
+	HID
+)
+
 type Attachment struct {
 	discordgo.MessageAttachment
 	MessageID string

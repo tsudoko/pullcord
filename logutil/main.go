@@ -5,16 +5,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/tsudoko/pullcord/logentry"
 	"github.com/tsudoko/pullcord/logformat"
 )
 
-const (
-	HTime = iota
-	HFetchType
-	HOp
-	HType
-	HID
-)
 
 type EntryCache map[string]map[string][]string
 type IDCache map[string]map[string]bool
@@ -33,7 +27,7 @@ func (ec *EntryCache) IDCache() IDCache {
 }
 
 func WriteNew(w io.Writer, e []string, cache *EntryCache) {
-	if !Equals((*cache)[e[HType]][e[HID]], e[1:]) {
+	if !Equals((*cache)[e[logentry.HType]][e[logentry.HID]], e[1:]) {
 		logformat.Write(w, e)
 	}
 }
@@ -60,15 +54,15 @@ func GuildCache(fpath string, cache *EntryCache) (err error) {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		entry := logformat.Read(scanner)
-		switch entry[HOp] {
+		e := logformat.Read(scanner)
+		switch e[logentry.HOp] {
 		case "add":
-			if (*cache)[entry[HType]] == nil {
-				(*cache)[entry[HType]] = make(map[string][]string)
+			if (*cache)[e[logentry.HType]] == nil {
+				(*cache)[e[logentry.HType]] = make(map[string][]string)
 			}
-			(*cache)[entry[HType]][entry[HID]] = entry[1:]
+			(*cache)[e[logentry.HType]][e[logentry.HID]] = e[1:]
 		case "del":
-			delete((*cache)[entry[HType]], entry[HID])
+			delete((*cache)[e[logentry.HType]], e[logentry.HID])
 		}
 	}
 
@@ -85,8 +79,8 @@ func LastMessageID(fpath string) (id string, err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		entry := logformat.Read(scanner)
-		if entry[HOp] == "add" && entry[HType] == "message" {
-			id = entry[HID]
+		if entry[logentry.HOp] == "add" && entry[logentry.HType] == "message" {
+			id = entry[logentry.HID]
 		}
 	}
 
