@@ -17,6 +17,20 @@ const (
 )
 
 type EntryCache map[string]map[string][]string
+type IDCache map[string]map[string]bool
+
+func (ec *EntryCache) IDCache() IDCache {
+	ic := make(IDCache)
+
+	for etype, ids := range *ec {
+		ic[etype] = make(map[string]bool)
+		for id := range ids {
+			ic[etype][id] = true
+		}
+	}
+
+	return ic
+}
 
 func WriteNew(w io.Writer, e []string, cache *EntryCache) {
 	if !Equals((*cache)[e[hType]][e[hID]], e[1:]) {

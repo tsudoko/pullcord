@@ -49,6 +49,7 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 }
 
 func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
+	deleted := cache.IDCache()
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -77,21 +78,25 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 
 		gEntry := logentry.Guild("history", "add", guild)
 		logutil.WriteNew(f, gEntry, &cache)
+		delete(deleted["guild"], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
 		cEntry := logentry.Channel("history", "add", c)
 		logutil.WriteNew(f, cEntry, &cache)
+		delete(deleted["channel"], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
 			oEntry := logentry.PermOverwrite("history", "add", o)
 			logutil.WriteNew(f, oEntry, &cache)
+			delete(deleted["permoverwrite"], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
 		rEntry := logentry.Role("history", "add", r)
 		logutil.WriteNew(f, rEntry, &cache)
+		delete(deleted["role"], r.ID)
 	}
 
 	for _, e := range guild.Emojis {
@@ -101,6 +106,7 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 		}
 		eEntry := logentry.Emoji("history", "add", e)
 		logutil.WriteNew(f, eEntry, &cache)
+		delete(deleted["emoji"], e.ID)
 	}
 
 	after := "0"
@@ -127,9 +133,14 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 
 			uEntry := logentry.User("history", "add", m)
 			logutil.WriteNew(f, uEntry, &cache)
+			delete(deleted["user"], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
+	}
+
+	for etype, ids := range deleted {
+		// add the del entry
 	}
 }
 
