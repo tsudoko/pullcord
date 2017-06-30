@@ -76,27 +76,27 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 			}
 		}
 
-		gEntry := logentry.Guild("history", "add", guild)
+		gEntry := logentry.Make("history", "add", guild)
 		logutil.WriteNew(f, gEntry, &cache)
-		delete(deleted["guild"], guild.ID)
+		delete(deleted[logentry.Type(guild)], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
-		cEntry := logentry.Channel("history", "add", c)
+		cEntry := logentry.Make("history", "add", c)
 		logutil.WriteNew(f, cEntry, &cache)
-		delete(deleted["channel"], c.ID)
+		delete(deleted[logentry.Type(c)], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
-			oEntry := logentry.PermOverwrite("history", "add", o)
+			oEntry := logentry.Make("history", "add", o)
 			logutil.WriteNew(f, oEntry, &cache)
-			delete(deleted["permoverwrite"], o.ID)
+			delete(deleted[logentry.Type(o)], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
-		rEntry := logentry.Role("history", "add", r)
+		rEntry := logentry.Make("history", "add", r)
 		logutil.WriteNew(f, rEntry, &cache)
-		delete(deleted["role"], r.ID)
+		delete(deleted[logentry.Type(r)], r.ID)
 	}
 
 	for _, e := range guild.Emojis {
@@ -104,9 +104,9 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 		if err != nil {
 			log.Printf("[%s] error downloading emoji %s: %v", id, e.ID, err)
 		}
-		eEntry := logentry.Emoji("history", "add", e)
+		eEntry := logentry.Make("history", "add", e)
 		logutil.WriteNew(f, eEntry, &cache)
-		delete(deleted["emoji"], e.ID)
+		delete(deleted[logentry.Type(e)], e.ID)
 	}
 
 	after := "0"
@@ -131,9 +131,9 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 				}
 			}
 
-			uEntry := logentry.User("history", "add", m)
+			uEntry := logentry.Make("history", "add", m)
 			logutil.WriteNew(f, uEntry, &cache)
-			delete(deleted["user"], m.User.ID)
+			delete(deleted[logentry.Type(m)], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
@@ -167,10 +167,10 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
-			logformat.Write(f, logentry.Message("history", "add", msgs[i]))
+			logformat.Write(f, logentry.Make("history", "add", msgs[i]))
 
 			for _, e := range msgs[i].Embeds {
-				logformat.Write(f, logentry.Embed("history", "add", msgs[i].ID, e))
+				logformat.Write(f, logentry.Make("history", "add", &logentry.Embed{*e, msgs[i].ID}))
 			}
 
 			for _, a := range msgs[i].Attachments {
@@ -179,7 +179,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 				if err != nil {
 					log.Printf("[%s/%s] error downloading attachment %s: %v", gid, id, a.ID, err)
 				}
-				logformat.Write(f, logentry.Attachment("history", "add", msgs[i].ID, a))
+				logformat.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
 			}
 
 			for _, r := range msgs[i].Reactions {
@@ -195,7 +195,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 						Emoji:     *r.Emoji,
 						ChannelID: id,
 					}
-					logformat.Write(f, logentry.Reaction("history", "add", reaction))
+					logformat.Write(f, logentry.Make("history", "add", reaction))
 				}
 
 				if r.Count > 100 {
@@ -206,7 +206,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 						ChannelID: id,
 					}
 					for i := 0; i < r.Count-100; i++ {
-						logformat.Write(f, logentry.Reaction("history", "add", reaction))
+						logformat.Write(f, logentry.Make("history", "add", reaction))
 					}
 				}
 			}

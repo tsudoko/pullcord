@@ -12,6 +12,16 @@ import (
 
 const timeFormat = "2006-01-02T15:04:05.000000-07:00"
 
+type Attachment struct {
+	discordgo.MessageAttachment
+	MessageID string
+}
+
+type Embed struct {
+	discordgo.MessageEmbed
+	MessageID string
+}
+
 func formatBool(name string, variable bool) string {
 	if variable {
 		return name
@@ -20,127 +30,110 @@ func formatBool(name string, variable bool) string {
 	}
 }
 
-func wrap(in []string) []string {
-	return append([]string{time.Now().Format(timeFormat)}, in...)
-}
-
-func Message(ftype, op string, m *discordgo.Message) []string {
-	row := []string{
-		ftype,
-		op,
-		"message",
-		m.ID,
-		m.Author.ID,
-		string(m.EditedTimestamp),
-		formatBool("tts", m.Tts),
-		m.Content,
+func Type(v interface{}) string {
+	switch v.(type) {
+	case *discordgo.Message:
+		return "message"
+	case *Attachment:
+		return "attachment"
+	case *discordgo.MessageReaction:
+		return "reaction"
+	case *Embed:
+		return "embed"
+	case *discordgo.Guild:
+		return "guild"
+	case *discordgo.Member:
+		return "user"
+	case *discordgo.Role:
+		return "role"
+	case *discordgo.Channel:
+		return "channel"
+	case *discordgo.PermissionOverwrite:
+		return "permoverwrite"
+	case *discordgo.Emoji:
+		return "emoji"
+	default:
+		panic("unsupported type")
 	}
-	return wrap(row)
 }
 
-func Attachment(ftype, op string, messageID string, a *discordgo.MessageAttachment) []string {
-	row := []string{ftype, op, "attachment", a.ID, messageID}
-	return wrap(row)
-}
+func Make(ftype, op string, v interface{}) []string {
+	var row []string
 
-func Reaction(ftype, op string, r *discordgo.MessageReaction) []string {
-	row := []string{ftype, op, "reaction", r.UserID, r.MessageID, r.Emoji.APIName()}
-	return wrap(row)
-}
+	switch v := v.(type) {
+	case *discordgo.Message:
+		row = []string{
+			v.ID,
+			v.Author.ID,
+			string(v.EditedTimestamp),
+			formatBool("tts", v.Tts),
+			v.Content,
+		}
+	case *Attachment:
+		row = []string{v.ID, v.MessageID}
+	case *discordgo.MessageReaction:
+		row = []string{v.UserID, v.MessageID, v.Emoji.APIName()}
+	case *Embed:
+		j, err := json.Marshal(v.MessageEmbed)
+		if err != nil {
+			panic(err)
+		}
 
-func Embed(ftype, op string, messageID string, e *discordgo.MessageEmbed) []string {
-	j, err := json.Marshal(e)
-	if err != nil {
-		panic(err)
+		row = []string{v.MessageID, string(j)}
+	case *discordgo.Guild:
+		row = []string{
+			v.ID,
+			v.Name,
+			v.Icon,
+			v.Splash,
+			v.OwnerID,
+			v.AfkChannelID,
+			strconv.Itoa(v.AfkTimeout),
+			formatBool("embeddable", v.EmbedEnabled),
+			v.EmbedChannelID,
+		}
+	case *discordgo.Member:
+		row = []string{
+			v.User.ID,
+			v.User.Username,
+			v.Nick,
+			v.User.Discriminator,
+			v.User.Avatar,
+			strings.Join(v.Roles, ","),
+		}
+	case *discordgo.Role:
+		row = []string{
+			v.ID,
+			v.Name,
+			strconv.Itoa(v.Color),
+			strconv.Itoa(v.Position),
+			strconv.Itoa(v.Permissions),
+			formatBool("hoist", v.Hoist),
+		}
+	case *discordgo.Channel:
+		row = []string{
+			v.ID,
+			v.Type,
+			strconv.Itoa(v.Position),
+			v.Name,
+			v.Topic,
+		}
+	case *discordgo.PermissionOverwrite:
+		row = []string{
+			v.ID,
+			v.Type,
+			strconv.Itoa(v.Allow),
+			strconv.Itoa(v.Deny),
+		}
+	case *discordgo.Emoji:
+		row = []string{
+			v.ID,
+			v.Name,
+			formatBool("nocolons", !v.RequireColons),
+		}
+	default:
+		panic("unsupported type")
 	}
 
-	row := []string{ftype, op, "embed", messageID, string(j)}
-	return wrap(row)
-}
-
-func Guild(ftype, op string, g *discordgo.Guild) []string {
-	row := []string{
-		ftype,
-		op,
-		"guild",
-		g.ID,
-		g.Name,
-		g.Icon,
-		g.Splash,
-		g.OwnerID,
-		g.AfkChannelID,
-		strconv.Itoa(g.AfkTimeout),
-		formatBool("embeddable", g.EmbedEnabled),
-		g.EmbedChannelID,
-	}
-	return wrap(row)
-}
-
-func User(ftype, op string, m *discordgo.Member) []string {
-	row := []string{
-		ftype,
-		op,
-		"user",
-		m.User.ID,
-		m.User.Username,
-		m.Nick,
-		m.User.Discriminator,
-		m.User.Avatar,
-		strings.Join(m.Roles, ","),
-	}
-	return wrap(row)
-}
-
-func Role(ftype, op string, r *discordgo.Role) []string {
-	row := []string{
-		ftype,
-		op,
-		"role",
-		r.ID,
-		r.Name,
-		strconv.Itoa(r.Color),
-		strconv.Itoa(r.Position),
-		strconv.Itoa(r.Permissions),
-		formatBool("hoist", r.Hoist),
-	}
-	return wrap(row)
-}
-
-func Channel(ftype, op string, c *discordgo.Channel) []string {
-	row := []string{
-		ftype,
-		op,
-		"channel",
-		c.ID,
-		c.Type,
-		strconv.Itoa(c.Position),
-		c.Name,
-		c.Topic,
-	}
-	return wrap(row)
-}
-
-func PermOverwrite(ftype, op string, o *discordgo.PermissionOverwrite) []string {
-	row := []string{
-		ftype,
-		op,
-		"permoverwrite",
-		o.ID,
-		o.Type,
-		strconv.Itoa(o.Allow),
-		strconv.Itoa(o.Deny),
-	}
-	return wrap(row)
-}
-
-func Emoji(ftype, op string, e *discordgo.Emoji) []string {
-	row := []string{
-		ftype,
-		op,
-		"emoji",
-		e.ID,
-		e.Name,
-		formatBool("nocolons", !e.RequireColons),
-	}
-	return wrap(row)
+	return append([]string{time.Now().Format(timeFormat), ftype, op, Type(v)}, row...)
 }
