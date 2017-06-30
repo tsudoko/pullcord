@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	hTime = iota
-	hFetchType
-	hOp
-	hType
-	hID
+	HTime = iota
+	HFetchType
+	HOp
+	HType
+	HID
 )
 
 type EntryCache map[string]map[string][]string
@@ -33,7 +33,7 @@ func (ec *EntryCache) IDCache() IDCache {
 }
 
 func WriteNew(w io.Writer, e []string, cache *EntryCache) {
-	if !Equals((*cache)[e[hType]][e[hID]], e[1:]) {
+	if !Equals((*cache)[e[HType]][e[HID]], e[1:]) {
 		logformat.Write(w, e)
 	}
 }
@@ -61,14 +61,14 @@ func GuildCache(fpath string, cache *EntryCache) (err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		entry := logformat.Read(scanner)
-		switch entry[hOp] {
+		switch entry[HOp] {
 		case "add":
-			if (*cache)[entry[hType]] == nil {
-				(*cache)[entry[hType]] = make(map[string][]string)
+			if (*cache)[entry[HType]] == nil {
+				(*cache)[entry[HType]] = make(map[string][]string)
 			}
-			(*cache)[entry[hType]][entry[hID]] = entry[1:]
+			(*cache)[entry[HType]][entry[HID]] = entry[1:]
 		case "del":
-			delete((*cache)[entry[hType]], entry[hID])
+			delete((*cache)[entry[HType]], entry[HID])
 		}
 	}
 
@@ -85,8 +85,8 @@ func LastMessageID(fpath string) (id string, err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		entry := logformat.Read(scanner)
-		if entry[hOp] == "add" && entry[hType] == "message" {
-			id = entry[hID]
+		if entry[HOp] == "add" && entry[HType] == "message" {
+			id = entry[HID]
 		}
 	}
 

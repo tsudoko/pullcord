@@ -30,6 +30,10 @@ func formatBool(name string, variable bool) string {
 	}
 }
 
+func Timestamp(row []string) []string {
+	return append([]string{time.Now().Format(timeFormat)}, row...)
+}
+
 func Type(v interface{}) string {
 	switch v.(type) {
 	case *discordgo.Message:
@@ -135,5 +139,5 @@ func Make(ftype, op string, v interface{}) []string {
 		panic("unsupported type")
 	}
 
-	return append([]string{time.Now().Format(timeFormat), ftype, op, Type(v)}, row...)
+	return Timestamp(append([]string{ftype, op, Type(v)}, row...))
 }

@@ -140,7 +140,11 @@ func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
 	}
 
 	for etype, ids := range deleted {
-		// add the del entry
+		for id := range ids {
+			entry := logentry.Timestamp(cache[etype][id])
+			entry[logutil.HOp] = "del"
+			logformat.Write(f, entry)
+		}
 	}
 }
 
