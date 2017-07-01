@@ -38,8 +38,8 @@ func formatBool(name string, variable bool) string {
 	}
 }
 
-func Timestamp(row []string) []string {
-	return append([]string{time.Now().Format(timeFormat)}, row...)
+func Timestamp() string {
+	return time.Now().Format(timeFormat)
 }
 
 func Type(v interface{}) string {
@@ -147,5 +147,5 @@ func Make(ftype, op string, v interface{}) []string {
 		panic("unsupported type")
 	}
 
-	return Timestamp(append([]string{ftype, op, Type(v)}, row...))
+	return append([]string{Timestamp(), ftype, op, Type(v)}, row...)
 }

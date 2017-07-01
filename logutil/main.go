@@ -9,7 +9,6 @@ import (
 	"github.com/tsudoko/pullcord/logformat"
 )
 
-
 type EntryCache map[string]map[string][]string
 type IDCache map[string]map[string]bool
 
@@ -27,7 +26,10 @@ func (ec *EntryCache) IDCache() IDCache {
 }
 
 func WriteNew(w io.Writer, e []string, cache *EntryCache) {
-	if !Equals((*cache)[e[logentry.HType]][e[logentry.HID]], e[1:]) {
+	cacheEntry := (*cache)[e[logentry.HType]][e[logentry.HID]]
+
+	if len(cacheEntry) < logentry.HTime+1 || len(e) < logentry.HTime+1 ||
+		!Equals(cacheEntry[logentry.HTime+1:], e[logentry.HTime+1:]) {
 		logformat.Write(w, e)
 	}
 }
@@ -60,7 +62,7 @@ func GuildCache(fpath string, cache *EntryCache) (err error) {
 			if (*cache)[e[logentry.HType]] == nil {
 				(*cache)[e[logentry.HType]] = make(map[string][]string)
 			}
-			(*cache)[e[logentry.HType]][e[logentry.HID]] = e[1:]
+			(*cache)[e[logentry.HType]][e[logentry.HID]] = e
 		case "del":
 			delete((*cache)[e[logentry.HType]], e[logentry.HID])
 		}
