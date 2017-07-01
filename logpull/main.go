@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/tsudoko/pullcord/cdndl"
+	"github.com/tsudoko/pullcord/logcache"
 	"github.com/tsudoko/pullcord/logentry"
 	"github.com/tsudoko/pullcord/logformat"
 	"github.com/tsudoko/pullcord/logutil"
@@ -27,9 +28,9 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 
 	if !(*fetchedGuilds)[c.GuildID] {
 		(*fetchedGuilds)[c.GuildID] = true
-		cache := make(logutil.EntryCache)
+		cache := make(logcache.Entries)
 		if _, err := os.Stat(guildFilename); err == nil {
-			if err := logutil.GuildCache(guildFilename, &cache); err != nil {
+			if err := logcache.NewEntries(guildFilename, &cache); err != nil {
 				log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
 				return
 			}
@@ -48,8 +49,8 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 	pullChannel(d, c.GuildID, c.ID, last)
 }
 
-func pullGuild(d *discordgo.Session, id string, cache logutil.EntryCache) {
-	deleted := cache.IDCache()
+func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
+	deleted := cache.IDs()
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
