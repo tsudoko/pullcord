@@ -144,8 +144,9 @@ func (p *Puller) pullGuild(id string) {
 
 			if m.User.Avatar != "" {
 				err := cdndl.Avatar(m.User)
+				log.Printf("[%s] downloading the avatar for user %s (%s)", id, m.User.ID, m.User.Username)
 				if err != nil {
-					log.Printf("[%s] error downloading avatar for user %s: %v", id, m.User.ID, err)
+					log.Printf("[%s] error downloading the avatar for user %s: %v", id, m.User.ID, err)
 				}
 			}
 
