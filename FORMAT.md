@@ -84,11 +84,11 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
  - `ownerid` (required)
  - `embeddable` (boolean)
 
-### `user`
+### `member`
 
-    time,fetchtype,action,type,id,name,nick,discriminator,avatar,roles
+    time,fetchtype,action,type,userid,username,discriminator,avatar,nick,roles
 
- - `name` (required) - global name
+ - `username` (required) - global name
  - `nick` - server nickname
  - `roles` - comma-separated role IDs
 

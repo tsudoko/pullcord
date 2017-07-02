@@ -60,7 +60,7 @@ func Type(v interface{}) string {
 	case *discordgo.Guild:
 		return "guild"
 	case *discordgo.Member:
-		return "user"
+		return "member"
 	case *discordgo.Role:
 		return "role"
 	case *discordgo.Channel:
@@ -118,9 +118,9 @@ func Make(ftype, op string, v interface{}) []string {
 		row = []string{
 			v.User.ID,
 			v.User.Username,
-			v.Nick,
 			v.User.Discriminator,
 			v.User.Avatar,
+			v.Nick,
 			strings.Join(v.Roles, ","),
 		}
 	case *discordgo.Role:
