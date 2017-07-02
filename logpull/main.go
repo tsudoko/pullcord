@@ -12,8 +12,8 @@ import (
 	"github.com/tsudoko/pullcord/cdndl"
 	"github.com/tsudoko/pullcord/logcache"
 	"github.com/tsudoko/pullcord/logentry"
-	"github.com/tsudoko/pullcord/logformat"
 	"github.com/tsudoko/pullcord/logutil"
+	"github.com/tsudoko/pullcord/tsv"
 )
 
 func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]bool) {
@@ -145,7 +145,7 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 			entry := cache[etype][id]
 			entry[logentry.HTime] = logentry.Timestamp()
 			entry[logentry.HOp] = "del"
-			logformat.Write(f, entry)
+			tsv.Write(f, entry)
 		}
 	}
 }
@@ -173,10 +173,10 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
-			logformat.Write(f, logentry.Make("history", "add", msgs[i]))
+			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
 
 			for _, e := range msgs[i].Embeds {
-				logformat.Write(f, logentry.Make("history", "add", &logentry.Embed{*e, msgs[i].ID}))
+				tsv.Write(f, logentry.Make("history", "add", &logentry.Embed{*e, msgs[i].ID}))
 			}
 
 			for _, a := range msgs[i].Attachments {
@@ -185,7 +185,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 				if err != nil {
 					log.Printf("[%s/%s] error downloading attachment %s: %v", gid, id, a.ID, err)
 				}
-				logformat.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
+				tsv.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
 			}
 
 			for _, r := range msgs[i].Reactions {
@@ -200,7 +200,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 						1,
 					}
 
-					logformat.Write(f, logentry.Make("history", "add", reaction))
+					tsv.Write(f, logentry.Make("history", "add", reaction))
 				}
 
 				if r.Count > 100 {
@@ -208,7 +208,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, id},
 						r.Count - 100,
 					}
-					logformat.Write(f, logentry.Make("history", "add", reaction))
+					tsv.Write(f, logentry.Make("history", "add", reaction))
 				}
 			}
 		}

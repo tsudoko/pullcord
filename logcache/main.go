@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/tsudoko/pullcord/logentry"
-	"github.com/tsudoko/pullcord/logformat"
+	"github.com/tsudoko/pullcord/tsv"
 )
 
 type Entries map[string]map[string][]string
@@ -24,15 +24,16 @@ func (ec *Entries) IDs() IDs {
 	return ic
 }
 
-func NewEntries(fpath string, cache *Entries) (err error) {
+func NewEntries(fpath string, cache *Entries) error {
 	f, err := os.Open(fpath)
 	if err != nil {
-		return
+		return err
 	}
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		e := logformat.Read(scanner)
+	        e := tsv.Read(scanner)
+
 		switch e[logentry.HOp] {
 		case "add":
 			if (*cache)[e[logentry.HType]] == nil {
@@ -44,6 +45,5 @@ func NewEntries(fpath string, cache *Entries) (err error) {
 		}
 	}
 
-	err = scanner.Err()
-	return
+	return scanner.Err()
 }

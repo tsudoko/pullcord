@@ -7,7 +7,7 @@ import (
 
 	"github.com/tsudoko/pullcord/logcache"
 	"github.com/tsudoko/pullcord/logentry"
-	"github.com/tsudoko/pullcord/logformat"
+	"github.com/tsudoko/pullcord/tsv"
 )
 
 func WriteNew(w io.Writer, e []string, cache *logcache.Entries) {
@@ -15,7 +15,7 @@ func WriteNew(w io.Writer, e []string, cache *logcache.Entries) {
 
 	if len(cacheEntry) < logentry.HTime+1 || len(e) < logentry.HTime+1 ||
 		!Equals(cacheEntry[logentry.HTime+1:], e[logentry.HTime+1:]) {
-		logformat.Write(w, e)
+		tsv.Write(w, e)
 	}
 }
 
@@ -41,7 +41,7 @@ func LastMessageID(fpath string) (id string, err error) {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		entry := logformat.Read(scanner)
+		entry := tsv.Read(scanner)
 		if entry[logentry.HOp] == "add" && entry[logentry.HType] == "message" {
 			id = entry[logentry.HID]
 		}

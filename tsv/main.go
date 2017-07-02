@@ -1,5 +1,5 @@
-// Package logformat provides a simple interface to read and write log entries.
-package logformat
+// Package tsv reads and writes tab-separated values (TSV) files.
+package tsv
 
 import (
 	"bufio"
