@@ -23,14 +23,18 @@ var (
 	xgid = flag.String("S", "", "comma-separated server IDs to exclude")
 
 	cids, gids, xcids, xgids map[string]bool
+
+	historyMode = flag.Bool("history", false, "download the whole history")
 )
 
 func do(d *discordgo.Session, _ *discordgo.Ready) {
 	channels := wantedChannels(d)
 
-	p := logpull.NewPuller(d)
-	for _, c := range channels {
-		p.Pull(c)
+	if *historyMode {
+		p := logpull.NewPuller(d)
+		for _, c := range channels {
+			p.Pull(c)
+		}
 	}
 
 	os.Exit(0)
@@ -43,6 +47,10 @@ func main() {
 	gids = makeWanted(*gid)
 	xcids = makeWanted(*xcid)
 	xgids = makeWanted(*xgid)
+
+	if !*historyMode {
+		log.Fatal("no modes specified, nothing to do")
+	}
 
 	d, err := discordgo.New(*username, *password, *token)
 	if err != nil {
