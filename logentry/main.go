@@ -25,6 +25,11 @@ type Attachment struct {
 	MessageID string
 }
 
+type Reaction struct {
+	discordgo.MessageReaction
+	Count int
+}
+
 type Embed struct {
 	discordgo.MessageEmbed
 	MessageID string
@@ -48,7 +53,7 @@ func Type(v interface{}) string {
 		return "message"
 	case *Attachment:
 		return "attachment"
-	case *discordgo.MessageReaction:
+	case *Reaction:
 		return "reaction"
 	case *Embed:
 		return "embed"
@@ -83,8 +88,13 @@ func Make(ftype, op string, v interface{}) []string {
 		}
 	case *Attachment:
 		row = []string{v.ID, v.MessageID}
-	case *discordgo.MessageReaction:
-		row = []string{v.UserID, v.MessageID, v.Emoji.APIName()}
+	case *Reaction:
+		row = []string{
+			v.UserID,
+			v.MessageID,
+			v.Emoji.APIName(),
+			strconv.Itoa(v.Count),
+		}
 	case *Embed:
 		j, err := json.Marshal(v.MessageEmbed)
 		if err != nil {

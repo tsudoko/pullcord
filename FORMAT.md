@@ -54,11 +54,12 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `reaction`
 
-    action,type,userid,messageid,emoji
+    action,type,userid,messageid,emoji,count
 
  - `userid` - can be empty if there are more than 100 reactions with a given emoji
  - `messageid` (required)
  - `emoji` (required) - character or `<emojiname>:<emojiid>`
+ - `count` (required) - number of unlisted users if there's no user ID present or `1` otherwise
 
 ### `embed`
 

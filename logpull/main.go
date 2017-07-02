@@ -195,25 +195,20 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 				}
 
 				for _, u := range users {
-					reaction := &discordgo.MessageReaction{
-						UserID:    u.ID,
-						MessageID: msgs[i].ID,
-						Emoji:     *r.Emoji,
-						ChannelID: id,
+					reaction := &logentry.Reaction{
+						discordgo.MessageReaction{u.ID, msgs[i].ID, *r.Emoji, id},
+						1,
 					}
+
 					logformat.Write(f, logentry.Make("history", "add", reaction))
 				}
 
 				if r.Count > 100 {
-					reaction := &discordgo.MessageReaction{
-						UserID:    "",
-						MessageID: msgs[i].ID,
-						Emoji:     *r.Emoji,
-						ChannelID: id,
+					reaction := &logentry.Reaction{
+						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, id},
+						r.Count - 100,
 					}
-					for i := 0; i < r.Count-100; i++ {
-						logformat.Write(f, logentry.Make("history", "add", reaction))
-					}
+					logformat.Write(f, logentry.Make("history", "add", reaction))
 				}
 			}
 		}
