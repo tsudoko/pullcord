@@ -16,7 +16,24 @@ import (
 	"github.com/tsudoko/pullcord/tsv"
 )
 
-func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]bool) {
+type Puller struct {
+	PulledGuilds map[string]bool
+
+	d *discordgo.Session
+
+	// per-guild caches
+	gCache   logcache.Entries
+	gDeleted logcache.IDs
+}
+
+func NewPuller(d *discordgo.Session) *Puller {
+	return &Puller{
+		PulledGuilds: make(map[string]bool),
+		d:            d,
+	}
+}
+
+func (p *Puller) Pull(c discordgo.Channel) {
 	last := "0"
 	filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
 	guildFilename := fmt.Sprintf("channels/%s/guild.tsv", c.GuildID)
@@ -26,16 +43,16 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 		return
 	}
 
-	if !(*fetchedGuilds)[c.GuildID] {
-		(*fetchedGuilds)[c.GuildID] = true
-		cache := make(logcache.Entries)
+	if !p.PulledGuilds[c.GuildID] {
+		p.PulledGuilds[c.GuildID] = true
+		p.gCache = make(logcache.Entries)
 		if _, err := os.Stat(guildFilename); err == nil {
-			if err := logcache.NewEntries(guildFilename, &cache); err != nil {
+			if err := logcache.NewEntries(guildFilename, &p.gCache); err != nil {
 				log.Printf("[%s] error reconstructing guild state, skipping (%v)", c.GuildID, err)
 				return
 			}
 		}
-		pullGuild(d, c.GuildID, cache)
+		p.pullGuild(c.GuildID)
 	}
 
 	if _, err := os.Stat(filename); err == nil {
@@ -46,11 +63,11 @@ func Pull(d *discordgo.Session, c discordgo.Channel, fetchedGuilds *map[string]b
 		}
 	}
 
-	pullChannel(d, c.GuildID, c.ID, last)
+	p.pullChannel(&c, last)
 }
 
-func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
-	deleted := cache.IDs()
+func (p *Puller) pullGuild(id string) {
+	p.gDeleted = p.gCache.IDs()
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -59,7 +76,7 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 	}
 	defer f.Close()
 
-	guild, err := d.Guild(id)
+	guild, err := p.d.Guild(id)
 	if err != nil {
 		log.Printf("[%s] error getting guild info: %v", id, err)
 	} else {
@@ -78,26 +95,26 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 		}
 
 		gEntry := logentry.Make("history", "add", guild)
-		logutil.WriteNew(f, gEntry, &cache)
-		delete(deleted[logentry.Type(guild)], guild.ID)
+		p.gCache.WriteNew(f, gEntry)
+		delete(p.gDeleted[logentry.Type(guild)], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
 		cEntry := logentry.Make("history", "add", c)
-		logutil.WriteNew(f, cEntry, &cache)
-		delete(deleted[logentry.Type(c)], c.ID)
+		p.gCache.WriteNew(f, cEntry)
+		delete(p.gDeleted[logentry.Type(c)], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
 			oEntry := logentry.Make("history", "add", o)
-			logutil.WriteNew(f, oEntry, &cache)
-			delete(deleted[logentry.Type(o)], o.ID)
+			p.gCache.WriteNew(f, oEntry)
+			delete(p.gDeleted[logentry.Type(o)], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
 		rEntry := logentry.Make("history", "add", r)
-		logutil.WriteNew(f, rEntry, &cache)
-		delete(deleted[logentry.Type(r)], r.ID)
+		p.gCache.WriteNew(f, rEntry)
+		delete(p.gDeleted[logentry.Type(r)], r.ID)
 	}
 
 	for _, e := range guild.Emojis {
@@ -106,13 +123,13 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 			log.Printf("[%s] error downloading emoji %s: %v", id, e.ID, err)
 		}
 		eEntry := logentry.Make("history", "add", e)
-		logutil.WriteNew(f, eEntry, &cache)
-		delete(deleted[logentry.Type(e)], e.ID)
+		p.gCache.WriteNew(f, eEntry)
+		delete(p.gDeleted[logentry.Type(e)], e.ID)
 	}
 
 	after := "0"
 	for {
-		members, err := d.GuildMembers(id, after, 1000)
+		members, err := p.d.GuildMembers(id, after, 1000)
 		if err != nil {
 			log.Printf("[%s] error getting members from %s: %v", id, after, err)
 			continue
@@ -133,16 +150,16 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 			}
 
 			uEntry := logentry.Make("history", "add", m)
-			logutil.WriteNew(f, uEntry, &cache)
-			delete(deleted[logentry.Type(m)], m.User.ID)
+			p.gCache.WriteNew(f, uEntry)
+			delete(p.gDeleted[logentry.Type(m)], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
 	}
 
-	for etype, ids := range deleted {
+	for etype, ids := range p.gDeleted {
 		for id := range ids {
-			entry := cache[etype][id]
+			entry := p.gCache[etype][id]
 			entry[logentry.HTime] = logentry.Timestamp()
 			entry[logentry.HOp] = "del"
 			tsv.Write(f, entry)
@@ -150,19 +167,19 @@ func pullGuild(d *discordgo.Session, id string, cache logcache.Entries) {
 	}
 }
 
-func pullChannel(d *discordgo.Session, gid, id, after string) {
-	filename := fmt.Sprintf("channels/%s/%s.tsv", gid, id)
+func (p *Puller) pullChannel(c *discordgo.Channel, after string) {
+	filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		log.Printf("[%s/%s] error opening the log file: %v", gid, id, err)
+		log.Printf("[%s/%s] error opening the log file: %v", c.GuildID, c.ID, err)
 		return
 	}
 	defer f.Close()
 
 	for {
-		msgs, err := d.ChannelMessages(id, 100, "", after, "")
+		msgs, err := p.d.ChannelMessages(c.ID, 100, "", after, "")
 		if err != nil {
-			log.Printf("[%s/%s] error getting messages from %s: %v", gid, id, after, err)
+			log.Printf("[%s/%s] error getting messages from %s: %v", c.GuildID, c.ID, after, err)
 		}
 
 		if len(msgs) == 0 {
@@ -180,23 +197,23 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 			}
 
 			for _, a := range msgs[i].Attachments {
-				log.Printf("[%s/%s] downloading attachment %s", gid, id, a.ID)
+				log.Printf("[%s/%s] downloading attachment %s", c.GuildID, c.ID, a.ID)
 				err := cdndl.Attachment(a.URL)
 				if err != nil {
-					log.Printf("[%s/%s] error downloading attachment %s: %v", gid, id, a.ID, err)
+					log.Printf("[%s/%s] error downloading attachment %s: %v", c.GuildID, c.ID, a.ID, err)
 				}
 				tsv.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
 			}
 
 			for _, r := range msgs[i].Reactions {
-				users, err := d.MessageReactions(id, msgs[i].ID, r.Emoji.APIName(), 100)
+				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, r.Emoji.APIName(), 100)
 				if err != nil {
-					log.Printf("[%s/%s] error getting users for reaction %s to %s: %v", gid, id, r.Emoji.APIName(), msgs[i].ID, err)
+					log.Printf("[%s/%s] error getting users for reaction %s to %s: %v", c.GuildID, c.ID, r.Emoji.APIName(), msgs[i].ID, err)
 				}
 
 				for _, u := range users {
 					reaction := &logentry.Reaction{
-						discordgo.MessageReaction{u.ID, msgs[i].ID, *r.Emoji, id},
+						discordgo.MessageReaction{u.ID, msgs[i].ID, *r.Emoji, c.ID},
 						1,
 					}
 
@@ -205,7 +222,7 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 
 				if r.Count > 100 {
 					reaction := &logentry.Reaction{
-						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, id},
+						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, c.ID},
 						r.Count - 100,
 					}
 					tsv.Write(f, logentry.Make("history", "add", reaction))
@@ -213,6 +230,6 @@ func pullChannel(d *discordgo.Session, gid, id, after string) {
 			}
 		}
 
-		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", gid, id, len(msgs), msgs[0].ID, msgs[0].Content)
+		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", c.GuildID, c.ID, len(msgs), msgs[0].ID, msgs[0].Content)
 	}
 }

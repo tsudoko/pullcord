@@ -26,11 +26,11 @@ var (
 )
 
 func do(d *discordgo.Session, _ *discordgo.Ready) {
-	fetchedGuilds := map[string]bool{}
 	channels := wantedChannels(d)
 
+	p := logpull.NewPuller(d)
 	for _, c := range channels {
-		logpull.Pull(d, c, &fetchedGuilds)
+		p.Pull(c)
 	}
 
 	os.Exit(0)

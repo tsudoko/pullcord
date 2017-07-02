@@ -2,6 +2,7 @@ package logcache
 
 import (
 	"bufio"
+	"io"
 	"os"
 
 	"github.com/tsudoko/pullcord/logentry"
@@ -32,7 +33,7 @@ func NewEntries(fpath string, cache *Entries) error {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-	        e := tsv.Read(scanner)
+		e := tsv.Read(scanner)
 
 		switch e[logentry.HOp] {
 		case "add":
@@ -46,4 +47,27 @@ func NewEntries(fpath string, cache *Entries) error {
 	}
 
 	return scanner.Err()
+}
+
+func (cache *Entries) WriteNew(w io.Writer, e []string) {
+	cacheEntry := (*cache)[e[logentry.HType]][e[logentry.HID]]
+
+	if len(cacheEntry) < logentry.HTime+1 || len(e) < logentry.HTime+1 ||
+		!entryEquals(cacheEntry[logentry.HTime+1:], e[logentry.HTime+1:]) {
+		tsv.Write(w, e)
+	}
+}
+
+func entryEquals(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
