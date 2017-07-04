@@ -33,7 +33,10 @@ func do(d *discordgo.Session, _ *discordgo.Ready) {
 	if *historyMode {
 		p := logpull.NewPuller(d)
 		for _, c := range channels {
-			p.Pull(c)
+			err := p.Pull(c)
+			if err != nil {
+				log.Fatalf("[%s/%s] %v", c.GuildID, c.ID, err)
+			}
 		}
 	}
 
