@@ -99,26 +99,22 @@ func (p *Puller) pullGuild(id string) error {
 			}
 		}
 
-		gEntry := logentry.Make("history", "add", guild)
-		p.gCache.WriteNew(f, gEntry)
+		p.gCache.WriteNew(f, logentry.Make("history", "add", guild))
 		delete(p.gDeleted[logentry.Type(guild)], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
-		cEntry := logentry.Make("history", "add", c)
-		p.gCache.WriteNew(f, cEntry)
+		p.gCache.WriteNew(f, logentry.Make("history", "add", c))
 		delete(p.gDeleted[logentry.Type(c)], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
-			oEntry := logentry.Make("history", "add", o)
-			p.gCache.WriteNew(f, oEntry)
+			p.gCache.WriteNew(f, logentry.Make("history", "add", o))
 			delete(p.gDeleted[logentry.Type(o)], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
-		rEntry := logentry.Make("history", "add", r)
-		p.gCache.WriteNew(f, rEntry)
+		p.gCache.WriteNew(f, logentry.Make("history", "add", r))
 		delete(p.gDeleted[logentry.Type(r)], r.ID)
 	}
 
@@ -127,8 +123,7 @@ func (p *Puller) pullGuild(id string) error {
 		if err != nil {
 			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
 		}
-		eEntry := logentry.Make("history", "add", e)
-		p.gCache.WriteNew(f, eEntry)
+		p.gCache.WriteNew(f, logentry.Make("history", "add", e))
 		delete(p.gDeleted[logentry.Type(e)], e.ID)
 	}
 
@@ -154,8 +149,7 @@ func (p *Puller) pullGuild(id string) error {
 				}
 			}
 
-			uEntry := logentry.Make("history", "add", m)
-			p.gCache.WriteNew(f, uEntry)
+			p.gCache.WriteNew(f, logentry.Make("history", "add", m))
 			delete(p.gDeleted[logentry.Type(m)], m.User.ID)
 		}
 
