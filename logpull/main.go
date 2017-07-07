@@ -91,24 +91,24 @@ func (p *Puller) PullGuild(id string) error {
 	guild, err := p.d.Guild(id)
 	if err != nil {
 		return fmt.Errorf("error getting guild info: %v", err)
-	} else {
-		if guild.Icon != "" {
-			err := cdndl.Icon(id, guild.Icon)
-			if err != nil {
-				return fmt.Errorf("error downloading the guild icon: %v", err)
-			}
-		}
-
-		if guild.Splash != "" {
-			err := cdndl.Splash(id, guild.Splash)
-			if err != nil {
-				return fmt.Errorf("error downloading the guild splash: %v", err)
-			}
-		}
-
-		p.cache.WriteNew(p.log, logentry.Make("history", "add", guild))
-		delete(p.deleted[logentry.Type(guild)], guild.ID)
 	}
+
+	if guild.Icon != "" {
+		err := cdndl.Icon(id, guild.Icon)
+		if err != nil {
+			return fmt.Errorf("error downloading the guild icon: %v", err)
+		}
+	}
+
+	if guild.Splash != "" {
+		err := cdndl.Splash(id, guild.Splash)
+		if err != nil {
+			return fmt.Errorf("error downloading the guild splash: %v", err)
+		}
+	}
+
+	p.cache.WriteNew(p.log, logentry.Make("history", "add", guild))
+	delete(p.deleted[logentry.Type(guild)], guild.ID)
 
 	for _, c := range guild.Channels {
 		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
