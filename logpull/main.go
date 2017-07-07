@@ -213,8 +213,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
-			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
-
 			if p.ever["member"] == nil {
 				p.ever["member"] = make(map[string]bool)
 			}
@@ -301,6 +299,8 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 					tsv.Write(f, logentry.Make("history", "add", reaction))
 				}
 			}
+
+			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
 		}
 
 		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", c.GuildID, c.ID, len(msgs), msgs[0].ID, msgs[0].Content)
