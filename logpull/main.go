@@ -21,11 +21,11 @@ import (
 type Puller struct {
 	d *discordgo.Session
 
-	gLog *os.File
+	log *os.File
 
-	gCache   logcache.Entries // for tracking changes between different pulls
-	gEver    logcache.IDs     // for determining if there's a need to add an entry for an outside entity, i.e. a user who left
-	gDeleted logcache.IDs     // for tracking deletions between different pulls, gCache could be used for that as well
+	cache   logcache.Entries // for tracking changes between different pulls
+	ever    logcache.IDs     // for determining if there's a need to add an entry for an outside entity, i.e. a user who left
+	deleted logcache.IDs     // for tracking deletions between different pulls, cache could be used for that as well
 }
 
 func NewPuller(d *discordgo.Session, gid string) (*Puller, error) {
@@ -43,11 +43,11 @@ func NewPuller(d *discordgo.Session, gid string) (*Puller, error) {
 }
 
 func (p *Puller) Close() error {
-	return p.gLog.Close()
+	return p.log.Close()
 }
 
 func (p *Puller) openLog(id string) error {
-	if p.gLog != nil {
+	if p.log != nil {
 		return nil
 	}
 
@@ -57,32 +57,32 @@ func (p *Puller) openLog(id string) error {
 	}
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	p.gLog = f
+	p.log = f
 
 	return err
 }
 
 func (p *Puller) loadCaches() error {
-	if p.gCache != nil && p.gEver != nil && p.gDeleted != nil {
+	if p.cache != nil && p.ever != nil && p.deleted != nil {
 		return nil
 	}
 
-	if p.gLog == nil {
+	if p.log == nil {
 		return errors.New("log file uninitialized")
 	}
 
-	p.gCache = make(logcache.Entries)
-	p.gEver = make(logcache.IDs)
+	p.cache = make(logcache.Entries)
+	p.ever = make(logcache.IDs)
 
-	if err := logcache.NewEntries(p.gLog.Name(), &p.gCache); err != nil {
+	if err := logcache.NewEntries(p.log.Name(), &p.cache); err != nil {
 		return err
 	}
 
-	if err := logutil.AllIDs(p.gLog.Name(), &p.gEver); err != nil {
+	if err := logutil.AllIDs(p.log.Name(), &p.ever); err != nil {
 		return err
 	}
 
-	p.gDeleted = p.gCache.IDs()
+	p.deleted = p.cache.IDs()
 
 	return nil
 }
@@ -106,23 +106,23 @@ func (p *Puller) PullGuild(id string) error {
 			}
 		}
 
-		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", guild))
-		delete(p.gDeleted[logentry.Type(guild)], guild.ID)
+		p.cache.WriteNew(p.log, logentry.Make("history", "add", guild))
+		delete(p.deleted[logentry.Type(guild)], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
-		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", c))
-		delete(p.gDeleted[logentry.Type(c)], c.ID)
+		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
+		delete(p.deleted[logentry.Type(c)], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
-			p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", o))
-			delete(p.gDeleted[logentry.Type(o)], o.ID)
+			p.cache.WriteNew(p.log, logentry.Make("history", "add", o))
+			delete(p.deleted[logentry.Type(o)], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
-		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", r))
-		delete(p.gDeleted[logentry.Type(r)], r.ID)
+		p.cache.WriteNew(p.log, logentry.Make("history", "add", r))
+		delete(p.deleted[logentry.Type(r)], r.ID)
 	}
 
 	for _, e := range guild.Emojis {
@@ -130,8 +130,8 @@ func (p *Puller) PullGuild(id string) error {
 		if err != nil {
 			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
 		}
-		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", e))
-		delete(p.gDeleted[logentry.Type(e)], e.ID)
+		p.cache.WriteNew(p.log, logentry.Make("history", "add", e))
+		delete(p.deleted[logentry.Type(e)], e.ID)
 	}
 
 	after := "0"
@@ -156,26 +156,26 @@ func (p *Puller) PullGuild(id string) error {
 				}
 			}
 
-			if p.gEver["member"] == nil {
-				p.gEver["member"] = make(map[string]bool)
+			if p.ever["member"] == nil {
+				p.ever["member"] = make(map[string]bool)
 			}
-			p.gEver["member"][m.User.ID] = true
+			p.ever["member"][m.User.ID] = true
 
-			p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", m))
-			delete(p.gDeleted[logentry.Type(m)], m.User.ID)
+			p.cache.WriteNew(p.log, logentry.Make("history", "add", m))
+			delete(p.deleted[logentry.Type(m)], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
 	}
 
-	p.gLog.Sync()
+	p.log.Sync()
 
-	for etype, ids := range p.gDeleted {
+	for etype, ids := range p.deleted {
 		for id := range ids {
-			entry := p.gCache[etype][id]
+			entry := p.cache[etype][id]
 			entry[logentry.HTime] = logentry.Timestamp()
 			entry[logentry.HOp] = "del"
-			tsv.Write(p.gLog, entry)
+			tsv.Write(p.log, entry)
 		}
 	}
 
@@ -215,21 +215,21 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 		for i := len(msgs) - 1; i >= 0; i-- {
 			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
 
-			if p.gEver["member"] == nil {
-				p.gEver["member"] = make(map[string]bool)
+			if p.ever["member"] == nil {
+				p.ever["member"] = make(map[string]bool)
 			}
 
-			if !p.gEver["member"][msgs[i].Author.ID] {
+			if !p.ever["member"][msgs[i].Author.ID] {
 				member := &discordgo.Member{User: msgs[i].Author}
-				p.gCache.WriteNew(p.gLog, logentry.Make("history", "del", member))
-				p.gEver["member"][msgs[i].Author.ID] = true
+				p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
+				p.ever["member"][msgs[i].Author.ID] = true
 			}
 
 			for _, u := range msgs[i].Mentions {
-				if !p.gEver["member"][u.ID] {
+				if !p.ever["member"][u.ID] {
 					member := &discordgo.Member{User: u}
-					p.gCache.WriteNew(p.gLog, logentry.Make("history", "del", member))
-					p.gEver["member"][u.ID] = true
+					p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
+					p.ever["member"][u.ID] = true
 				}
 			}
 
@@ -288,6 +288,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", c.GuildID, c.ID, len(msgs), msgs[0].ID, msgs[0].Content)
 	}
 
-	p.gLog.Sync()
+	p.log.Sync()
 	return nil
 }
