@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -22,9 +23,12 @@ type Puller struct {
 
 	d *discordgo.Session
 
+	gLog *os.File
+
 	// per-guild caches
-	gCache   logcache.Entries
-	gDeleted logcache.IDs
+	gCache   logcache.Entries // for tracking changes between different pulls
+	gEver    logcache.IDs     // for determining if there's a need to add an entry for an outside entity, i.e. a user who left
+	gDeleted logcache.IDs     // for tracking deletions between different pulls, gCache could be used for that as well
 }
 
 func NewPuller(d *discordgo.Session) *Puller {
@@ -46,8 +50,13 @@ func (p *Puller) Pull(c discordgo.Channel) error {
 	if !p.PulledGuilds[c.GuildID] {
 		p.PulledGuilds[c.GuildID] = true
 		p.gCache = make(logcache.Entries)
+		p.gEver = make(logcache.IDs)
 		if _, err := os.Stat(guildFilename); err == nil {
 			if err := logcache.NewEntries(guildFilename, &p.gCache); err != nil {
+				return fmt.Errorf("error reconstructing guild state: %v", err)
+			}
+
+			if err := logutil.AllIDs(guildFilename, &p.gEver); err != nil {
 				return fmt.Errorf("error reconstructing guild state: %v", err)
 			}
 		}
@@ -72,14 +81,27 @@ func (p *Puller) Pull(c discordgo.Channel) error {
 	return nil
 }
 
-func (p *Puller) pullGuild(id string) error {
-	p.gDeleted = p.gCache.IDs()
+func (p *Puller) Close() error {
+	return p.gLog.Close()
+}
+
+func (p *Puller) openLog(id string) error {
+	if p.gLog != nil {
+		return nil
+	}
+
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	p.gLog = f
+	return err
+}
+
+func (p *Puller) pullGuild(id string) error {
+	p.gDeleted = p.gCache.IDs()
+	err := p.openLog(id)
 	if err != nil {
 		return fmt.Errorf("error opening the log file: %v", err)
 	}
-	defer f.Close()
 
 	guild, err := p.d.Guild(id)
 	if err != nil {
@@ -99,22 +121,22 @@ func (p *Puller) pullGuild(id string) error {
 			}
 		}
 
-		p.gCache.WriteNew(f, logentry.Make("history", "add", guild))
+		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", guild))
 		delete(p.gDeleted[logentry.Type(guild)], guild.ID)
 	}
 
 	for _, c := range guild.Channels {
-		p.gCache.WriteNew(f, logentry.Make("history", "add", c))
+		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", c))
 		delete(p.gDeleted[logentry.Type(c)], c.ID)
 
 		for _, o := range c.PermissionOverwrites {
-			p.gCache.WriteNew(f, logentry.Make("history", "add", o))
+			p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", o))
 			delete(p.gDeleted[logentry.Type(o)], o.ID)
 		}
 	}
 
 	for _, r := range guild.Roles {
-		p.gCache.WriteNew(f, logentry.Make("history", "add", r))
+		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", r))
 		delete(p.gDeleted[logentry.Type(r)], r.ID)
 	}
 
@@ -123,7 +145,7 @@ func (p *Puller) pullGuild(id string) error {
 		if err != nil {
 			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
 		}
-		p.gCache.WriteNew(f, logentry.Make("history", "add", e))
+		p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", e))
 		delete(p.gDeleted[logentry.Type(e)], e.ID)
 	}
 
@@ -149,19 +171,26 @@ func (p *Puller) pullGuild(id string) error {
 				}
 			}
 
-			p.gCache.WriteNew(f, logentry.Make("history", "add", m))
+			if p.gEver["member"] == nil {
+				p.gEver["member"] = make(map[string]bool)
+			}
+			p.gEver["member"][m.User.ID] = true
+
+			p.gCache.WriteNew(p.gLog, logentry.Make("history", "add", m))
 			delete(p.gDeleted[logentry.Type(m)], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
 	}
 
+	p.gLog.Sync()
+
 	for etype, ids := range p.gDeleted {
 		for id := range ids {
 			entry := p.gCache[etype][id]
 			entry[logentry.HTime] = logentry.Timestamp()
 			entry[logentry.HOp] = "del"
-			tsv.Write(f, entry)
+			tsv.Write(p.gLog, entry)
 		}
 	}
 
@@ -191,6 +220,32 @@ func (p *Puller) pullChannel(c *discordgo.Channel, after string) error {
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
 			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
+			log.Println(p.gEver)
+
+			if p.gEver["member"] == nil {
+				p.gEver["member"] = make(map[string]bool)
+			}
+
+			if !p.gEver["member"][msgs[i].Author.ID] {
+				member := &discordgo.Member{User: msgs[i].Author}
+				p.gCache.WriteNew(p.gLog, logentry.Make("history", "del", member))
+				p.gEver["member"][msgs[i].Author.ID] = true
+			}
+
+			for _, u := range msgs[i].Mentions {
+				if !p.gEver["member"][u.ID] {
+					member := &discordgo.Member{User: u}
+					p.gCache.WriteNew(p.gLog, logentry.Make("history", "del", member))
+					p.gEver["member"][u.ID] = true
+				}
+			}
+
+			for _, match := range regexp.MustCompile("<:[^:]+:([0-9]+)>").FindAllStringSubmatch(msgs[i].Content, -1) {
+				err := cdndl.Emoji(match[1])
+				if err != nil {
+					return fmt.Errorf("error downloading outside emoji %s: %v", match[1], err)
+				}
+			}
 
 			for _, e := range msgs[i].Embeds {
 				tsv.Write(f, logentry.Make("history", "add", &logentry.Embed{*e, msgs[i].ID}))
@@ -206,6 +261,13 @@ func (p *Puller) pullChannel(c *discordgo.Channel, after string) error {
 			}
 
 			for _, r := range msgs[i].Reactions {
+				if r.Emoji.ID != "" {
+					err := cdndl.Emoji(r.Emoji.ID)
+					if err != nil {
+						return fmt.Errorf("error downloading outside emoji %s: %v", r.Emoji.ID, err)
+					}
+				}
+
 				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, r.Emoji.APIName(), 100)
 				if err != nil {
 					return fmt.Errorf("error getting users for reaction %s to %s: %v", r.Emoji.APIName(), msgs[i].ID, err)
@@ -233,5 +295,6 @@ func (p *Puller) pullChannel(c *discordgo.Channel, after string) error {
 		log.Printf("[%s/%s] downloaded %d messages, last id %s with content %s", c.GuildID, c.ID, len(msgs), msgs[0].ID, msgs[0].Content)
 	}
 
+	p.gLog.Sync()
 	return nil
 }

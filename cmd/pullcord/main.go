@@ -32,6 +32,7 @@ func do(d *discordgo.Session, _ *discordgo.Ready) {
 
 	if *historyMode {
 		p := logpull.NewPuller(d)
+		defer p.Close()
 		for _, c := range channels {
 			err := p.Pull(c)
 			if err != nil {
