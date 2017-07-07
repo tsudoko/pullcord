@@ -19,66 +19,27 @@ import (
 )
 
 type Puller struct {
-	PulledGuilds map[string]bool
-
 	d *discordgo.Session
 
 	gLog *os.File
 
-	// per-guild caches
 	gCache   logcache.Entries // for tracking changes between different pulls
 	gEver    logcache.IDs     // for determining if there's a need to add an entry for an outside entity, i.e. a user who left
 	gDeleted logcache.IDs     // for tracking deletions between different pulls, gCache could be used for that as well
 }
 
-func NewPuller(d *discordgo.Session) *Puller {
-	return &Puller{
-		PulledGuilds: make(map[string]bool),
-		d:            d,
-	}
-}
+func NewPuller(d *discordgo.Session, gid string) (*Puller, error) {
+	p := &Puller{d: d}
 
-func (p *Puller) Pull(c discordgo.Channel) error {
-	last := "0"
-	filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
-	guildFilename := fmt.Sprintf("channels/%s/guild.tsv", c.GuildID)
-
-	if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
-		return errors.New("creating the guild dir failed")
+	if err := p.openLog(gid); err != nil {
+		return nil, fmt.Errorf("error opening the log file: %v", err)
 	}
 
-	if !p.PulledGuilds[c.GuildID] {
-		p.PulledGuilds[c.GuildID] = true
-		p.gCache = make(logcache.Entries)
-		p.gEver = make(logcache.IDs)
-		if _, err := os.Stat(guildFilename); err == nil {
-			if err := logcache.NewEntries(guildFilename, &p.gCache); err != nil {
-				return fmt.Errorf("error reconstructing guild state: %v", err)
-			}
-
-			if err := logutil.AllIDs(guildFilename, &p.gEver); err != nil {
-				return fmt.Errorf("error reconstructing guild state: %v", err)
-			}
-		}
-		err := p.pullGuild(c.GuildID)
-		if err != nil {
-			return err
-		}
+	if err := p.loadCaches(); err != nil {
+		return nil, fmt.Errorf("error reconstructing guild state: %v", err)
 	}
 
-	if _, err := os.Stat(filename); err == nil {
-		last, err = logutil.LastMessageID(filename)
-		if err != nil {
-			return fmt.Errorf("error getting last message id: %v", err)
-		}
-	}
-
-	err := p.pullChannel(&c, last)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return p, nil
 }
 
 func (p *Puller) Close() error {
@@ -91,18 +52,42 @@ func (p *Puller) openLog(id string) error {
 	}
 
 	filename := fmt.Sprintf("channels/%s/guild.tsv", id)
+	if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
+		return errors.New("creating the guild dir failed")
+	}
+
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	p.gLog = f
+
 	return err
 }
 
-func (p *Puller) pullGuild(id string) error {
-	p.gDeleted = p.gCache.IDs()
-	err := p.openLog(id)
-	if err != nil {
-		return fmt.Errorf("error opening the log file: %v", err)
+func (p *Puller) loadCaches() error {
+	if p.gCache != nil && p.gEver != nil && p.gDeleted != nil {
+		return nil
 	}
 
+	if p.gLog == nil {
+		return errors.New("log file uninitialized")
+	}
+
+	p.gCache = make(logcache.Entries)
+	p.gEver = make(logcache.IDs)
+
+	if err := logcache.NewEntries(p.gLog.Name(), &p.gCache); err != nil {
+		return err
+	}
+
+	if err := logutil.AllIDs(p.gLog.Name(), &p.gEver); err != nil {
+		return err
+	}
+
+	p.gDeleted = p.gCache.IDs()
+
+	return nil
+}
+
+func (p *Puller) PullGuild(id string) error {
 	guild, err := p.d.Guild(id)
 	if err != nil {
 		return fmt.Errorf("error getting guild info: %v", err)
@@ -197,8 +182,17 @@ func (p *Puller) pullGuild(id string) error {
 	return nil
 }
 
-func (p *Puller) pullChannel(c *discordgo.Channel, after string) error {
+func (p *Puller) PullChannel(c *discordgo.Channel) error {
+	after := "0"
 	filename := fmt.Sprintf("channels/%s/%s.tsv", c.GuildID, c.ID)
+
+	if _, err := os.Stat(filename); err == nil {
+		after, err = logutil.LastMessageID(filename)
+		if err != nil {
+			return fmt.Errorf("error getting last message id: %v", err)
+		}
+	}
+
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return fmt.Errorf("error opening the log file: %v", err)
@@ -220,7 +214,6 @@ func (p *Puller) pullChannel(c *discordgo.Channel, after string) error {
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
 			tsv.Write(f, logentry.Make("history", "add", msgs[i]))
-			log.Println(p.gEver)
 
 			if p.gEver["member"] == nil {
 				p.gEver["member"] = make(map[string]bool)

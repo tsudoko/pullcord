@@ -28,15 +28,33 @@ var (
 )
 
 func do(d *discordgo.Session, _ *discordgo.Ready) {
+	pullers := make(map[string]*logpull.Puller)
 	channels := wantedChannels(d)
 
 	if *historyMode {
-		p := logpull.NewPuller(d)
-		defer p.Close()
 		for _, c := range channels {
-			err := p.Pull(c)
+			if pullers[c.GuildID] == nil {
+				p, err := logpull.NewPuller(d, c.GuildID)
+				if err != nil {
+					log.Fatalf("[%s] %v", c.GuildID, err)
+				}
+
+				pullers[c.GuildID] = p
+				err = p.PullGuild(c.GuildID)
+				if err != nil {
+					log.Fatalf("[%s] %v", c.GuildID, err)
+				}
+			}
+
+			err := pullers[c.GuildID].PullChannel(&c)
 			if err != nil {
 				log.Fatalf("[%s/%s] %v", c.GuildID, c.ID, err)
+			}
+		}
+
+		for id, p := range pullers {
+			if err := p.Close(); err != nil {
+				log.Printf("[%s] error closing log file: %v", id, err)
 			}
 		}
 	}
