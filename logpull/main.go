@@ -221,6 +221,15 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 			if !p.ever["member"][msgs[i].Author.ID] {
 				member := &discordgo.Member{User: msgs[i].Author}
+
+				if member.User.Avatar != "" {
+					err := cdndl.Avatar(member.User)
+					log.Printf("[%s] downloading avatar for user %s (%s)", c.GuildID, member.User.ID, member.User.Username)
+					if err != nil {
+						return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
+					}
+				}
+
 				p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
 				p.ever["member"][msgs[i].Author.ID] = true
 			}
@@ -228,6 +237,15 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			for _, u := range msgs[i].Mentions {
 				if !p.ever["member"][u.ID] {
 					member := &discordgo.Member{User: u}
+
+					if member.User.Avatar != "" {
+						err := cdndl.Avatar(member.User)
+						log.Printf("[%s] downloading avatar for user %s (%s)", c.GuildID, member.User.ID, member.User.Username)
+						if err != nil {
+							return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
+						}
+					}
+
 					p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
 					p.ever["member"][u.ID] = true
 				}
