@@ -114,10 +114,12 @@ func (p *Puller) PullGuild(id string) error {
 		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
 		delete(p.deleted[logentry.Type(c)], c.ID)
 
-		for _, o := range c.PermissionOverwrites {
-			p.cache.WriteNew(p.log, logentry.Make("history", "add", o))
-			delete(p.deleted[logentry.Type(o)], o.ID)
-		}
+		/*
+			for _, o := range c.PermissionOverwrites {
+				p.cache.WriteNew(p.log, logentry.Make("history", "add", o))
+				delete(p.deleted[logentry.Type(o)], o.ID)
+			}
+		*/
 	}
 
 	for _, r := range guild.Roles {
