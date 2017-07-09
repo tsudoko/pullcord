@@ -3,6 +3,7 @@ package cdndl
 import (
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,6 +33,8 @@ func absDL(URL string) error {
 	if _, err := os.Stat(fPath); err == nil {
 		return nil
 	}
+
+	log.Printf("downloading %s", URL)
 
 	r, err := http.Get(URL)
 	if err != nil {

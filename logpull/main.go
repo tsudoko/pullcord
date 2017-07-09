@@ -152,7 +152,6 @@ func (p *Puller) PullGuild(id string) error {
 
 			if m.User.Avatar != "" {
 				err := cdndl.Avatar(m.User)
-				log.Printf("[%s] downloading avatar for user %s (%s)", id, m.User.ID, m.User.Username)
 				if err != nil {
 					return fmt.Errorf("error downloading avatar for user %s: %v", m.User.ID, err)
 				}
@@ -224,7 +223,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 				if member.User.Avatar != "" {
 					err := cdndl.Avatar(member.User)
-					log.Printf("[%s] downloading avatar for user %s (%s)", c.GuildID, member.User.ID, member.User.Username)
 					if err != nil {
 						return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
 					}
@@ -240,7 +238,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 					if member.User.Avatar != "" {
 						err := cdndl.Avatar(member.User)
-						log.Printf("[%s] downloading avatar for user %s (%s)", c.GuildID, member.User.ID, member.User.Username)
 						if err != nil {
 							return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
 						}
@@ -263,7 +260,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			}
 
 			for _, a := range msgs[i].Attachments {
-				log.Printf("[%s/%s] downloading attachment %s", c.GuildID, c.ID, a.ID)
 				err := cdndl.Attachment(a.URL)
 				if err != nil {
 					return fmt.Errorf("error downloading attachment %s: %v", a.ID, err)
