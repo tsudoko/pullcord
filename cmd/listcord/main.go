@@ -53,9 +53,9 @@ func list(d *discordgo.Session, event *discordgo.Ready) {
 				var symbol string
 
 				switch i.Type {
-				case "text":
+				case discordgo.ChannelTypeGuildText:
 					symbol = "#"
-				case "voice":
+				case discordgo.ChannelTypeGuildVoice:
 					symbol = "🔊 "
 				default:
 					symbol = "(?) "
