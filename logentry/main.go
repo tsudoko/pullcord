@@ -50,6 +50,8 @@ func formatChannelType(t discordgo.ChannelType) string {
 		return "text"
 	case discordgo.ChannelTypeGuildVoice:
 		return "voice"
+	case discordgo.ChannelTypeGuildCategory:
+		return "category"
 	default:
 		log.Panicf("unsupported channel type %v", t)
 		return "invalid"
