@@ -111,11 +111,12 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `channel`
 
-    time,fetchtype,action,type,id,chantype,pos,name,topic
+    time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw
 
  - `chantype` (required) - `text` or `voice`
  - `pos` (required)
  - `name` (required)
+ - `nsfw` (boolean)
 
 ### `permoverwrite`
 

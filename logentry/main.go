@@ -152,6 +152,7 @@ func Make(ftype, op string, v interface{}) []string {
 			strconv.Itoa(v.Position),
 			v.Name,
 			v.Topic,
+			formatBool("nsfw", v.NSFW),
 		}
 	case *discordgo.PermissionOverwrite:
 		row = []string{
