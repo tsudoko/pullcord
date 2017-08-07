@@ -58,7 +58,9 @@ func saveFile(r io.Reader, fPath string) error {
 		return err
 	}
 
-	f, err := os.Create(fPath + ".part")
+	tempPath := fPath + ".part"
+
+	f, err := os.Create(tempPath)
 	if err != nil {
 		return err
 	}
@@ -68,7 +70,7 @@ func saveFile(r io.Reader, fPath string) error {
 		return err
 	}
 
-	if err = os.Rename(fPath+".part", fPath); err != nil {
+	if err = os.Rename(tempPath, fPath); err != nil {
 		return err
 	}
 
