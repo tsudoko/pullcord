@@ -1,7 +1,7 @@
 package cdndl
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -23,6 +23,10 @@ type ErrNotOk struct {
 // discordgo uses EndpointAPI, which includes an extra "/api" path element
 var EndpointCDNEmojis = discordgo.EndpointCDN + "emojis/"
 
+func NewErrNotOk(code int) error {
+	return ErrNotOk{fmt.Errorf("non-200 status code: %d", code), code}
+}
+
 func absDL(URL string) error {
 	u, err := url.Parse(URL)
 	if err != nil {
@@ -43,7 +47,7 @@ func absDL(URL string) error {
 	defer r.Body.Close()
 
 	if r.StatusCode != 200 {
-		return ErrNotOk{errors.New("non-200 status code"), r.StatusCode}
+		return NewErrNotOk(r.StatusCode)
 	}
 
 	if err = saveFile(r.Body, fPath); err != nil {
