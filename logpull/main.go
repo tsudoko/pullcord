@@ -214,6 +214,10 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 		// messages are retrieved in descending order
 		for i := len(msgs) - 1; i >= 0; i-- {
+			if msgs[i].Type != discordgo.MessageTypeDefault {
+				continue
+			}
+
 			if p.ever["member"] == nil {
 				p.ever["member"] = make(map[string]bool)
 			}

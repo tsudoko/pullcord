@@ -3,6 +3,7 @@ package logentry
 
 import (
 	"encoding/json"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,20 @@ func formatBool(name string, variable bool) string {
 		return name
 	} else {
 		return ""
+	}
+}
+
+func formatChannelType(t discordgo.ChannelType) string {
+	switch t {
+	case discordgo.ChannelTypeGuildText:
+		return "text"
+	case discordgo.ChannelTypeGuildVoice:
+		return "voice"
+	case discordgo.ChannelTypeGuildCategory:
+		return "category"
+	default:
+		log.Panicf("unsupported channel type %v", t)
+		return "invalid"
 	}
 }
 
@@ -135,10 +150,11 @@ func Make(ftype, op string, v interface{}) []string {
 	case *discordgo.Channel:
 		row = []string{
 			v.ID,
-			v.Type,
+			formatChannelType(v.Type),
 			strconv.Itoa(v.Position),
 			v.Name,
 			v.Topic,
+			formatBool("nsfw", v.NSFW),
 		}
 	case *discordgo.PermissionOverwrite:
 		row = []string{

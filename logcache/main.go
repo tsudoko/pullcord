@@ -59,12 +59,23 @@ func (cache *Entries) WriteNew(w io.Writer, e []string) {
 }
 
 func entryEquals(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
+	larger := b
+	smaller := a
+
+	if len(a) > len(b) {
+		larger = a
+		smaller = b
 	}
 
-	for i := range a {
+	for i := range smaller {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	// For backwards compatibility with older entry formats
+	for _, field := range larger[len(smaller):] {
+		if field != "" {
 			return false
 		}
 	}

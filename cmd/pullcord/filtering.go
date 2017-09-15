@@ -33,7 +33,7 @@ func wantedChannels(d *discordgo.Session) []discordgo.Channel {
 			}
 
 			for _, c := range g.Channels {
-				if !wantedChannel(c.ID) || c.Type != "text" {
+				if !wantedChannel(c.ID) || c.Type != discordgo.ChannelTypeGuildText {
 					continue
 				}
 
