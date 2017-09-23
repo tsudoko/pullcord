@@ -111,12 +111,13 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `channel`
 
-    time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw
+    time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw,category
 
  - `chantype` (required) - `text`, `voice` or `category`
  - `pos` (required)
  - `name` (required)
  - `nsfw` (boolean)
+ - `category` - ID of the parent category for a channel
 
 ### `permoverwrite`
 

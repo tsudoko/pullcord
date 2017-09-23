@@ -155,6 +155,7 @@ func Make(ftype, op string, v interface{}) []string {
 			v.Name,
 			v.Topic,
 			formatBool("nsfw", v.NSFW),
+			v.ParentID,
 		}
 	case *discordgo.PermissionOverwrite:
 		row = []string{
