@@ -114,6 +114,8 @@ func (p *Puller) PullGuild(id string) error {
 		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
 		delete(p.deleted[logentry.Type(c)], c.ID)
 
+		// permission overwrite IDs are not unique right now
+		// we could concatenate the channel ID with the role/user ID, but that would make the ID 128-bit wide
 		/*
 			for _, o := range c.PermissionOverwrites {
 				p.cache.WriteNew(p.log, logentry.Make("history", "add", o))
