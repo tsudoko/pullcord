@@ -18,7 +18,7 @@ func Read(s *bufio.Scanner) []string {
 
 	for i := range record {
 		for j := len(subs) - 1; j >= 0; j-- {
-			record[i] = strings.Replace(record[i], subs[j][0], subs[j][1], -1)
+			record[i] = strings.Replace(record[i], subs[j][1], subs[j][0], -1)
 		}
 	}
 
