@@ -65,6 +65,45 @@ func list(d *discordgo.Session, event *discordgo.Ready) {
 			}
 		}
 	}
+	if *summary {
+		goto exit
+	}
+	{
+		fmt.Println("@me")
+		c, err := d.UserChannels()
+		if err != nil {
+			log.Fatal("error getting dm channels:", err)
+		}
+
+		for _, i := range c {
+			var symbol string
+
+			switch i.Type {
+			case discordgo.ChannelTypeDM:
+				symbol = ""
+			case discordgo.ChannelTypeGroupDM:
+				symbol = "(g) "
+			default:
+				symbol = "(?) "
+			}
+
+			if i.Name != "" {
+				fmt.Println("\t", i.ID, symbol+i.Name)
+			} else {
+				fmt.Printf("\t %s %s", i.ID, symbol)
+				for idx, r := range i.Recipients {
+					fmt.Print(r.Username)
+					if idx != len(i.Recipients)-1 {
+						fmt.Print(", ")
+					} else {
+						fmt.Print("\n")
+					}
+				}
+			}
+		}
+
+	}
+exit:
 	os.Exit(0)
 }
 
