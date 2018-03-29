@@ -24,7 +24,7 @@ type Puller struct {
 	log *os.File
 
 	cache   logcache.Entries // for tracking changes between different pulls
-	ever    logcache.IDs     // for determining if there's a need to add an entry for an outside entity, i.e. a user who left
+	ever    logcache.IDs     // for determining if there's a need to add an entry for an external entity, i.e. a user who left
 	deleted logcache.IDs     // for tracking deletions between different pulls, cache could be used for that as well
 }
 
@@ -257,7 +257,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			for _, match := range regexp.MustCompile("<:[^:]+:([0-9]+)>").FindAllStringSubmatch(msgs[i].Content, -1) {
 				err := cdndl.Emoji(match[1])
 				if err != nil {
-					return fmt.Errorf("error downloading outside emoji %s: %v", match[1], err)
+					return fmt.Errorf("error downloading external emoji %s: %v", match[1], err)
 				}
 			}
 
@@ -277,7 +277,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				if r.Emoji.ID != "" {
 					err := cdndl.Emoji(r.Emoji.ID)
 					if err != nil {
-						return fmt.Errorf("error downloading outside emoji %s: %v", r.Emoji.ID, err)
+						return fmt.Errorf("error downloading external emoji %s: %v", r.Emoji.ID, err)
 					}
 				}
 
