@@ -85,8 +85,14 @@ func Avatar(u *discordgo.User) error {
 	return absDL(u.AvatarURL(maxSize))
 }
 
-func Emoji(id string) error {
-	return absDL(EndpointCDNEmojis + id + ".png" + "?size=" + maxSize)
+func Emoji(id string, animated bool) error {
+	var ext string
+	if animated {
+		ext = "gif"
+	} else {
+		ext = "png"
+	}
+	return absDL(fmt.Sprintf("%s%s.%s?size=%s", EndpointCDNEmojis, id, ext, maxSize))
 }
 
 func Icon(gid, hash string) error {

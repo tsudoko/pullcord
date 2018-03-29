@@ -130,7 +130,7 @@ func (p *Puller) PullGuild(id string) error {
 	}
 
 	for _, e := range guild.Emojis {
-		err := cdndl.Emoji(e.ID)
+		err := cdndl.Emoji(e.ID, e.Animated)
 		if err != nil {
 			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
 		}
@@ -254,8 +254,8 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				}
 			}
 
-			for _, match := range regexp.MustCompile("<:[^:]+:([0-9]+)>").FindAllStringSubmatch(msgs[i].Content, -1) {
-				err := cdndl.Emoji(match[1])
+			for _, match := range regexp.MustCompile("<(a?):[^:]+:([0-9]+)>").FindAllStringSubmatch(msgs[i].Content, -1) {
+				err := cdndl.Emoji(match[2], match[1] == "a")
 				if err != nil {
 					return fmt.Errorf("error downloading external emoji %s: %v", match[1], err)
 				}
@@ -275,7 +275,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 			for _, r := range msgs[i].Reactions {
 				if r.Emoji.ID != "" {
-					err := cdndl.Emoji(r.Emoji.ID)
+					err := cdndl.Emoji(r.Emoji.ID, r.Emoji.Animated)
 					if err != nil {
 						return fmt.Errorf("error downloading external emoji %s: %v", r.Emoji.ID, err)
 					}
