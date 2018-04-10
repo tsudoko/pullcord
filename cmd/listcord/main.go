@@ -115,13 +115,12 @@ func main() {
 		log.Fatal("login failed:", err)
 	}
 
+	d.AddHandler(list)
 	err = d.Open()
 	defer d.Close()
 	if err != nil {
 		log.Fatal("opening the websocket connection failed:", err)
 	}
-
-	d.AddHandler(list)
 
 	if *token == "" {
 		log.Println("token:", d.Token)
