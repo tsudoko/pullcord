@@ -26,13 +26,13 @@ func wantedChannels(d *discordgo.Session) []discordgo.Channel {
 				continue
 			}
 
-			g, err := d.Guild(gid)
+			gch, err := d.GuildChannels(gid)
 			if err != nil {
-				log.Fatalf("error getting guild %s: %s", gid, err)
+				log.Fatalf("error getting channels for %s: %s", gid, err)
 				continue
 			}
 
-			for _, c := range g.Channels {
+			for _, c := range gch {
 				if !wantedChannel(c.ID) || c.Type != discordgo.ChannelTypeGuildText {
 					continue
 				}

@@ -110,7 +110,12 @@ func (p *Puller) PullGuild(id string) error {
 	p.cache.WriteNew(p.log, logentry.Make("history", "add", guild))
 	delete(p.deleted[logentry.Type(guild)], guild.ID)
 
-	for _, c := range guild.Channels {
+	gch, err := p.d.GuildChannels(guild.ID)
+	if err != nil {
+			return fmt.Errorf("error getting channels: %v", err)
+	}
+
+	for _, c := range gch {
 		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
 		delete(p.deleted[logentry.Type(c)], c.ID)
 

@@ -43,13 +43,12 @@ func list(d *discordgo.Session, event *discordgo.Ready) {
 				continue
 			}
 
-			g, err := d.Guild(gid)
+			gch, err := d.GuildChannels(gid)
 			if err != nil {
-				log.Printf("error getting guild %s: %s", gid, err)
-				continue
+				log.Fatalf("error getting channels for %s: %s", gid, err)
 			}
 
-			for _, i := range g.Channels {
+			for _, i := range gch {
 				var symbol string
 
 				switch i.Type {
