@@ -25,6 +25,8 @@ var (
 	cids, gids, xcids, xgids map[string]bool
 
 	historyMode = flag.Bool("history", false, "download the whole history")
+
+	dlDM = flag.Bool("dm", false, "download DMs")
 )
 
 func do(d *discordgo.Session, _ *discordgo.Ready) {
@@ -49,6 +51,32 @@ func do(d *discordgo.Session, _ *discordgo.Ready) {
 			err := pullers[c.GuildID].PullChannel(&c)
 			if err != nil {
 				log.Fatalf("[%s/%s] %v", c.GuildID, c.ID, err)
+			}
+		}
+
+		if *dlDM {
+			p, err := logpull.NewPuller(d, "@me")
+			if err != nil {
+				log.Fatalf("[@me] %v", err)
+			}
+
+			pullers["@me"] = p
+			err = p.PullDMGuild()
+			if err != nil {
+				log.Fatalf("[@me] %v", err)
+			}
+
+			uc, err := d.UserChannels()
+			if err != nil {
+				log.Fatalf("[@me] error getting user channels: %v", err)
+			}
+
+			for _, c := range uc {
+				c.GuildID = "@me"
+				err := pullers[c.GuildID].PullChannel(c)
+				if err != nil {
+					log.Fatalf("[%s/%s] %v", c.GuildID, c.ID, err)
+				}
 			}
 		}
 

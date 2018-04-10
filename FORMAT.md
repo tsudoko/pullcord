@@ -111,13 +111,15 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `channel`
 
-    time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw,category
+    time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw,category,recipients,icon
 
- - `chantype` (required) - `text`, `voice` or `category`
+ - `chantype` (required) - `text`, `voice`, `category`, `dm` or `groupdm`
  - `pos` (required)
- - `name` (required)
+ - `name` (required if not `dm` or `groupdm`)
  - `nsfw` (boolean)
  - `category` - ID of the parent category for a channel
+ - `recipients` - comma-separated list of user IDs, only relevant to DM channels
+ - `icon` - only relevant to DM channels
 
 ### `permoverwrite`
 

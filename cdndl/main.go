@@ -99,6 +99,10 @@ func Icon(gid, hash string) error {
 	return absDL(discordgo.EndpointGuildIcon(gid, hash) + "?size=" + maxSize)
 }
 
+func ChannelIcon(cid, hash string) error {
+	return absDL(discordgo.EndpointGroupIcon(cid, hash) + "?size=" + maxSize)
+}
+
 func Splash(gid, hash string) error {
 	return absDL(discordgo.EndpointGuildSplash(gid, hash) + "?size=" + maxSize)
 }

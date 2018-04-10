@@ -12,9 +12,10 @@ channel history, server history and all related files. A `realtime` mode is
 planned.
 
 By default `pullcord` downloads data from every channel and server the account
-is connected to. To fine-tune this behavior, filtering options such as `-c`,
-`-s`, `-C` and `-S` can be used. All files are downloaded to the current
-working directory; creating a new empty directory is recommended.
+is connected to, with exception of DMs. To fine-tune this behavior, filtering
+options such as `-c`, `-s`, `-C`, `-S` and `-dm` can be used. All files are
+downloaded to the current working directory; creating a new empty directory is
+recommended.
 
 `Pullcord` exits as soon as it encounters any error.
 

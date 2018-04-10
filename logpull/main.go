@@ -156,24 +156,71 @@ func (p *Puller) PullGuild(id string) error {
 
 		for _, m := range members {
 			after = m.User.ID
-
-			if m.User.Avatar != "" {
-				err := cdndl.Avatar(m.User)
-				if err != nil {
-					return fmt.Errorf("error downloading avatar for user %s: %v", m.User.ID, err)
-				}
+			if err := p.pullMember(m); err != nil {
+				return err
 			}
-
-			if p.ever["member"] == nil {
-				p.ever["member"] = make(map[string]bool)
-			}
-			p.ever["member"][m.User.ID] = true
-
-			p.cache.WriteNew(p.log, logentry.Make("history", "add", m))
-			delete(p.deleted[logentry.Type(m)], m.User.ID)
 		}
 
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
+	}
+
+	p.log.Sync()
+
+	for etype, ids := range p.deleted {
+		for id := range ids {
+			entry := p.cache[etype][id]
+			entry[logentry.HTime] = logentry.Timestamp()
+			entry[logentry.HOp] = "del"
+			tsv.Write(p.log, entry)
+		}
+	}
+
+	return nil
+}
+
+func (p *Puller) pullMember(m *discordgo.Member) error {
+	if m.User.Avatar != "" {
+		err := cdndl.Avatar(m.User)
+		if err != nil {
+			return fmt.Errorf("error downloading avatar for user %s: %v", m.User.ID, err)
+		}
+	}
+
+	if p.ever["member"] == nil {
+		p.ever["member"] = make(map[string]bool)
+	}
+	p.ever["member"][m.User.ID] = true
+
+	p.cache.WriteNew(p.log, logentry.Make("history", "add", m))
+	delete(p.deleted[logentry.Type(m)], m.User.ID)
+
+	return nil
+}
+
+func (p *Puller) PullDMGuild() error {
+	chans, err := p.d.UserChannels()
+	if err != nil {
+		return fmt.Errorf("error getting DM channels: %v", err)
+	}
+
+	for _, c := range chans {
+		p.cache.WriteNew(p.log, logentry.Make("history", "add", c))
+		delete(p.deleted[logentry.Type(c)], c.ID)
+		for _, r := range c.Recipients {
+			m := &discordgo.Member{User: r}
+			if err := p.pullMember(m); err != nil {
+				return err
+			}
+		}
+
+		// permission overwrite IDs are not unique right now
+		// we could concatenate the channel ID with the role/user ID, but that would make the ID 128-bit wide
+		/*
+			for _, o := range c.PermissionOverwrites {
+				p.cache.WriteNew(p.log, logentry.Make("history", "add", o))
+				delete(p.deleted[logentry.Type(o)], o.ID)
+			}
+		*/
 	}
 
 	p.log.Sync()
@@ -200,6 +247,14 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			return fmt.Errorf("error getting last message id: %v", err)
 		}
 	}
+
+	if c.Icon != "" {
+		err := cdndl.ChannelIcon(c.ID, c.Icon)
+		if err != nil {
+			return fmt.Errorf("error downloading channel icon: %v", err)
+		}
+	}
+
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {

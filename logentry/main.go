@@ -36,6 +36,13 @@ type Embed struct {
 	MessageID string
 }
 
+func idsFromUsers(users []*discordgo.User) (ids []string) {
+	for _, u := range users {
+		ids = append(ids, u.ID)
+	}
+	return
+}
+
 func formatBool(name string, variable bool) string {
 	if variable {
 		return name
@@ -52,6 +59,10 @@ func formatChannelType(t discordgo.ChannelType) string {
 		return "voice"
 	case discordgo.ChannelTypeGuildCategory:
 		return "category"
+	case discordgo.ChannelTypeDM:
+		return "dm"
+	case discordgo.ChannelTypeGroupDM:
+		return "groupdm"
 	default:
 		log.Panicf("unsupported channel type %v", t)
 		return "invalid"
@@ -156,6 +167,8 @@ func Make(ftype, op string, v interface{}) []string {
 			v.Topic,
 			formatBool("nsfw", v.NSFW),
 			v.ParentID,
+			strings.Join(idsFromUsers(v.Recipients), ","),
+			v.Icon,
 		}
 	case *discordgo.PermissionOverwrite:
 		row = []string{
