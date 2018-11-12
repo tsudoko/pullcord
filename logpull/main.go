@@ -320,7 +320,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				e := &discordgo.Emoji{ID: match[2], Animated: match[1] == "a"}
 				err := p.cdnDL(e, 0)
 				if err != nil {
-					return fmt.Errorf("error downloading external emoji %s: %v", match[1], err)
+					return fmt.Errorf("error downloading external emoji %s: %v", e.ID, err)
 				}
 			}
 
