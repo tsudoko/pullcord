@@ -94,7 +94,13 @@ func Emoji(id string, animated bool) error {
 	} else {
 		ext = "png"
 	}
-	return absDL(fmt.Sprintf("%s%s.%s?size=%s", EndpointCDNEmojis, id, ext, maxSize))
+	err := absDL(fmt.Sprintf("%s%s.%s?size=%s", EndpointCDNEmojis, id, ext, maxSize))
+	if cerr, ok := err.(ErrNotOk); ok && cerr.StatusCode == 415 && ext == "gif" {
+		log.Printf("warning: animated version of emoji %s doesn't exist, trying png", id)
+		ext = "png"
+		err = absDL(fmt.Sprintf("%s%s.%s?size=%s", EndpointCDNEmojis, id, ext, maxSize))
+	}
+	return err
 }
 
 func Icon(gid, hash string) error {
