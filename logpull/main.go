@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -343,7 +344,9 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 					}
 				}
 
-				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, r.Emoji.APIName(), 100)
+				// workaround until https://github.com/bwmarrin/discordgo/pull/615 is merged
+				name := strings.Replace(r.Emoji.APIName(), "#", "%23", -1)
+				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, name, 100)
 				if err != nil {
 					return fmt.Errorf("error getting users for reaction %s to %s: %v", r.Emoji.APIName(), msgs[i].ID, err)
 				}
