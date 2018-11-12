@@ -17,14 +17,15 @@ const maxSize = "2048"
 // Returned when the request gets a non-200 HTTP response.
 type ErrNotOk struct {
 	error
+	URL string
 	StatusCode int
 }
 
 // discordgo uses EndpointAPI, which includes an extra "/api" path element
 var EndpointCDNEmojis = discordgo.EndpointCDN + "emojis/"
 
-func NewErrNotOk(code int) error {
-	return ErrNotOk{fmt.Errorf("non-200 status code: %d", code), code}
+func NewErrNotOk(URL string, code int) error {
+	return ErrNotOk{fmt.Errorf("non-200 status code: %d", code), URL, code}
 }
 
 func absDL(URL string) error {
@@ -47,7 +48,7 @@ func absDL(URL string) error {
 	defer r.Body.Close()
 
 	if r.StatusCode != 200 {
-		return NewErrNotOk(r.StatusCode)
+		return NewErrNotOk(URL, r.StatusCode)
 	}
 
 	if err = saveFile(r.Body, fPath); err != nil {
