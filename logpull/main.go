@@ -11,7 +11,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/tsudoko/pullcord/cdndl"
 	"github.com/tsudoko/pullcord/logcache"
 	"github.com/tsudoko/pullcord/logentry"
 	"github.com/tsudoko/pullcord/logutil"
@@ -22,6 +21,9 @@ type Puller struct {
 	d *discordgo.Session
 
 	log *os.File
+
+	// not fully implemented yet, we currently don't check if all emoji/attachments/etc with log entries have been downloaded
+	lightMode bool // if true, attachments, emoji, icons, etc. aren't downloaded
 
 	cache   logcache.Entries // for tracking changes between different pulls
 	ever    logcache.IDs     // for determining if there's a need to add an entry for an external entity, i.e. a user who left
@@ -94,14 +96,14 @@ func (p *Puller) PullGuild(id string) error {
 	}
 
 	if guild.Icon != "" {
-		err := cdndl.Icon(id, guild.Icon)
+		err := p.cdnDL(guild, cdnIcon)
 		if err != nil {
 			return fmt.Errorf("error downloading the guild icon: %v", err)
 		}
 	}
 
 	if guild.Splash != "" {
-		err := cdndl.Splash(id, guild.Splash)
+		err := p.cdnDL(guild, cdnSplash)
 		if err != nil {
 			return fmt.Errorf("error downloading the guild splash: %v", err)
 		}
@@ -135,7 +137,7 @@ func (p *Puller) PullGuild(id string) error {
 	}
 
 	for _, e := range guild.Emojis {
-		err := cdndl.Emoji(e.ID, e.Animated)
+		err := p.cdnDL(e, 0)
 		if err != nil {
 			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
 		}
@@ -180,7 +182,7 @@ func (p *Puller) PullGuild(id string) error {
 
 func (p *Puller) pullMember(m *discordgo.Member) error {
 	if m.User.Avatar != "" {
-		err := cdndl.Avatar(m.User)
+		err := p.cdnDL(m.User, cdnAvatar)
 		if err != nil {
 			return fmt.Errorf("error downloading avatar for user %s: %v", m.User.ID, err)
 		}
@@ -249,7 +251,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 	}
 
 	if c.Icon != "" {
-		err := cdndl.ChannelIcon(c.ID, c.Icon)
+		err := p.cdnDL(c, cdnChannelIcon)
 		if err != nil {
 			return fmt.Errorf("error downloading channel icon: %v", err)
 		}
@@ -288,7 +290,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				member := &discordgo.Member{User: msgs[i].Author}
 
 				if member.User.Avatar != "" {
-					err := cdndl.Avatar(member.User)
+					err := p.cdnDL(member.User, cdnAvatar)
 					if err != nil {
 						return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
 					}
@@ -303,7 +305,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 					member := &discordgo.Member{User: u}
 
 					if member.User.Avatar != "" {
-						err := cdndl.Avatar(member.User)
+						err := p.cdnDL(member.User, cdnAvatar)
 						if err != nil {
 							return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
 						}
@@ -315,7 +317,8 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			}
 
 			for _, match := range regexp.MustCompile("<(a?):[^:]+:([0-9]+)>").FindAllStringSubmatch(msgs[i].Content, -1) {
-				err := cdndl.Emoji(match[2], match[1] == "a")
+				e := &discordgo.Emoji{ID: match[2], Animated: match[1] == "a"}
+				err := p.cdnDL(e, 0)
 				if err != nil {
 					return fmt.Errorf("error downloading external emoji %s: %v", match[1], err)
 				}
@@ -326,7 +329,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			}
 
 			for _, a := range msgs[i].Attachments {
-				err := cdndl.Attachment(a.URL)
+				err := p.cdnDL(a, 0)
 				if err != nil {
 					return fmt.Errorf("error downloading attachment %s: %v", a.ID, err)
 				}
@@ -335,7 +338,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 			for _, r := range msgs[i].Reactions {
 				if r.Emoji.ID != "" {
-					err := cdndl.Emoji(r.Emoji.ID, r.Emoji.Animated)
+					err := p.cdnDL(r.Emoji, 0)
 					if err != nil {
 						return fmt.Errorf("error downloading external emoji %s: %v", r.Emoji.ID, err)
 					}

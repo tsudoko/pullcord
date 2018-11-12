@@ -27,6 +27,8 @@ var (
 	historyMode = flag.Bool("history", false, "download the whole history")
 
 	dlDM = flag.Bool("dm", false, "download DMs")
+	// not fully implemented yet, we currently don't check if all emoji/attachments/etc with log entries have been downloaded
+	//lightMode = flag.Bool("light", false, "skip downloading non-textual data such as attachments or emoji")
 )
 
 func do(d *discordgo.Session, _ *discordgo.Ready) {
