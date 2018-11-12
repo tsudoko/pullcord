@@ -17,7 +17,7 @@ const maxSize = "2048"
 // Returned when the request gets a non-200 HTTP response.
 type ErrNotOk struct {
 	error
-	URL string
+	URL        string
 	StatusCode int
 }
 

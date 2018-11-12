@@ -114,7 +114,7 @@ func (p *Puller) PullGuild(id string) error {
 
 	gch, err := p.d.GuildChannels(guild.ID)
 	if err != nil {
-			return fmt.Errorf("error getting channels: %v", err)
+		return fmt.Errorf("error getting channels: %v", err)
 	}
 
 	for _, c := range gch {
@@ -256,7 +256,6 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			return fmt.Errorf("error downloading channel icon: %v", err)
 		}
 	}
-
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
