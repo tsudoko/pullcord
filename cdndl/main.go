@@ -69,11 +69,12 @@ func saveFile(r io.Reader, fPath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	if _, err := io.Copy(f, r); err != nil {
+		f.Close()
 		return err
 	}
+	f.Close()
 
 	if err = os.Rename(tempPath, fPath); err != nil {
 		return err
