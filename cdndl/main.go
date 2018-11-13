@@ -8,11 +8,14 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 const maxSize = "2048"
+const longNamePlaceholder = "_long_filename"
 
 // Returned when the request gets a non-200 HTTP response.
 type ErrNotOk struct {
@@ -39,6 +42,10 @@ func absDL(URL string) error {
 		return nil
 	}
 
+	return absDLTo(URL, fPath)
+}
+
+func absDLTo(URL string, target string) error {
 	log.Printf("downloading %s", URL)
 
 	r, err := http.Get(URL)
@@ -51,11 +58,18 @@ func absDL(URL string) error {
 		return NewErrNotOk(URL, r.StatusCode)
 	}
 
-	if err = saveFile(r.Body, fPath); err != nil {
-		return err
+	err = saveFile(r.Body, target)
+	if cerr, ok := err.(*os.PathError); ok {
+		if errno, ok := cerr.Err.(syscall.Errno); ok && errno == syscall.ENAMETOOLONG {
+			dir, name := filepath.Split(target)
+			newname := longNamePlaceholder + filepath.Ext(name)
+			log.Printf("warning: %s: file name too long, renaming to %s", name, newname)
+			return absDLTo(URL, filepath.Join(dir, newname))
+
+		}
 	}
 
-	return nil
+	return err
 }
 
 func saveFile(r io.Reader, fPath string) error {
