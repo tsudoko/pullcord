@@ -52,10 +52,11 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
 ### `attachment`
 
-    time,fetchtype,action,type,id,messageid
+    time,fetchtype,action,type,id,messageid,filename
 
  - `id` (required)
  - `messageid` (required)
+ - `filename` (optional)
 
 ### `reaction`
 

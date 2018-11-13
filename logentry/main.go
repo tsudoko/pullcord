@@ -113,7 +113,7 @@ func Make(ftype, op string, v interface{}) []string {
 			v.Content,
 		}
 	case *Attachment:
-		row = []string{v.ID, v.MessageID}
+		row = []string{v.ID, v.MessageID, v.Filename}
 	case *Reaction:
 		row = []string{
 			v.UserID,
