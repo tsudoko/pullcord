@@ -1,9 +1,9 @@
 Log format
 ==========
 
-Logs are [TSV][] files. Records are delimited by line feeds.
-
-There are three escape sequences:
+Logs are [TSV][] files. Records are delimited by line feeds. Since field
+contents are type-dependent, the first record does not contain field names.
+There are no quoted fields, the following escape sequences are used instead:
 
     \t U+0009 CHARACTER TABULATION
     \n U+000A LINE FEED
