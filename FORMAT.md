@@ -12,6 +12,11 @@ There are no quoted fields, the following escape sequences are used instead:
 All entries describe actions, i.e. each new message, edit or deletion is a
 separate entry.
 
+Keep in mind some records had fields added to them after the initial version
+of the format was developed, so you shouldn't assume all fields listed here
+are always present. If a new field is introduced, it's always added after the
+last field of the current record, the order of existing ones does not change.
+
 Fields common for all entries:
 
     time,fetchtype,action,type,id
