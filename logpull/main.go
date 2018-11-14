@@ -18,6 +18,15 @@ import (
 	"github.com/tsudoko/pullcord/tsv"
 )
 
+type PullError struct {
+	what string
+	err error
+}
+
+func (e *PullError) Error() string {
+	return fmt.Sprintf("error %s: (%T) %v", e.what, e.err, e.err)
+}
+
 type Puller struct {
 	d *discordgo.Session
 
@@ -35,11 +44,11 @@ func NewPuller(d *discordgo.Session, gid string) (*Puller, error) {
 	p := &Puller{d: d}
 
 	if err := p.openLog(gid); err != nil {
-		return nil, fmt.Errorf("error opening the log file: %v", err)
+		return nil, &PullError{"opening the log file", err}
 	}
 
 	if err := p.loadCaches(); err != nil {
-		return nil, fmt.Errorf("error reconstructing guild state: %v", err)
+		return nil, &PullError{"reconstructing guild state", err}
 	}
 
 	return p, nil
@@ -93,20 +102,20 @@ func (p *Puller) loadCaches() error {
 func (p *Puller) PullGuild(id string) error {
 	guild, err := p.d.Guild(id)
 	if err != nil {
-		return fmt.Errorf("error getting guild info: %v", err)
+		return &PullError{"getting guild info", err}
 	}
 
 	if guild.Icon != "" {
 		err := p.cdnDL(guild, cdnIcon)
 		if err != nil {
-			return fmt.Errorf("error downloading the guild icon: %v", err)
+			return &PullError{"downloading the guild icon", err}
 		}
 	}
 
 	if guild.Splash != "" {
 		err := p.cdnDL(guild, cdnSplash)
 		if err != nil {
-			return fmt.Errorf("error downloading the guild splash: %v", err)
+			return &PullError{"downloading the guild splash", err}
 		}
 	}
 
@@ -115,7 +124,7 @@ func (p *Puller) PullGuild(id string) error {
 
 	gch, err := p.d.GuildChannels(guild.ID)
 	if err != nil {
-		return fmt.Errorf("error getting channels: %v", err)
+		return &PullError{"getting channels", err}
 	}
 
 	for _, c := range gch {
@@ -140,7 +149,7 @@ func (p *Puller) PullGuild(id string) error {
 	for _, e := range guild.Emojis {
 		err := p.cdnDL(e, 0)
 		if err != nil {
-			return fmt.Errorf("error downloading emoji %s: %v", e.ID, err)
+			return &PullError{"downloading emoji " + e.ID, err}
 		}
 		p.cache.WriteNew(p.log, logentry.Make("history", "add", e))
 		delete(p.deleted[logentry.Type(e)], e.ID)
@@ -150,7 +159,7 @@ func (p *Puller) PullGuild(id string) error {
 	for {
 		members, err := p.d.GuildMembers(id, after, 1000)
 		if err != nil {
-			return fmt.Errorf("error getting members from %s: %v", after, err)
+			return &PullError{"getting members from " + after, err}
 		}
 
 		if len(members) == 0 {
@@ -185,7 +194,7 @@ func (p *Puller) pullMember(m *discordgo.Member) error {
 	if m.User.Avatar != "" {
 		err := p.cdnDL(m.User, cdnAvatar)
 		if err != nil {
-			return fmt.Errorf("error downloading avatar for user %s: %v", m.User.ID, err)
+			return &PullError{"downloading avatar for user " + m.User.ID, err}
 		}
 	}
 
@@ -203,7 +212,7 @@ func (p *Puller) pullMember(m *discordgo.Member) error {
 func (p *Puller) PullDMGuild() error {
 	chans, err := p.d.UserChannels()
 	if err != nil {
-		return fmt.Errorf("error getting DM channels: %v", err)
+		return &PullError{"getting DM channels", err}
 	}
 
 	for _, c := range chans {
@@ -247,27 +256,27 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 	if _, err := os.Stat(filename); err == nil {
 		after, err = logutil.LastMessageID(filename)
 		if err != nil {
-			return fmt.Errorf("error getting last message id: %v", err)
+			return &PullError{"getting last message id", err}
 		}
 	}
 
 	if c.Icon != "" {
 		err := p.cdnDL(c, cdnChannelIcon)
 		if err != nil {
-			return fmt.Errorf("error downloading channel icon: %v", err)
+			return &PullError{"downloading channel icon", err}
 		}
 	}
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		return fmt.Errorf("error opening the log file: %v", err)
+		return &PullError{"opening the log file", err}
 	}
 	defer f.Close()
 
 	for {
 		msgs, err := p.d.ChannelMessages(c.ID, 100, "", after, "")
 		if err != nil {
-			return fmt.Errorf("error getting messages from %s: %v", after, err)
+			return &PullError{"getting messages from " + after, err}
 		}
 
 		if len(msgs) == 0 {
@@ -292,7 +301,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				if member.User.Avatar != "" {
 					err := p.cdnDL(member.User, cdnAvatar)
 					if err != nil {
-						return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
+						return &PullError{"downloading avatar for user " + member.User.ID, err}
 					}
 				}
 
@@ -307,7 +316,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 					if member.User.Avatar != "" {
 						err := p.cdnDL(member.User, cdnAvatar)
 						if err != nil {
-							return fmt.Errorf("error downloading avatar for user %s: %v", member.User.ID, err)
+							return &PullError{"downloading avatar for user " + member.User.ID, err}
 						}
 					}
 
@@ -320,7 +329,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				e := &discordgo.Emoji{ID: match[2], Animated: match[1] == "a"}
 				err := p.cdnDL(e, 0)
 				if err != nil {
-					return fmt.Errorf("error downloading external emoji %s: %v", e.ID, err)
+					return &PullError{"downloading external emoji " + e.ID, err}
 				}
 			}
 
@@ -331,7 +340,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			for _, a := range msgs[i].Attachments {
 				err := p.cdnDL(a, 0)
 				if err != nil {
-					return fmt.Errorf("error downloading attachment %s: %v", a.ID, err)
+					return &PullError{"downloading attachment " + a.ID, err}
 				}
 				tsv.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
 			}
@@ -340,7 +349,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				if r.Emoji.ID != "" {
 					err := p.cdnDL(r.Emoji, 0)
 					if err != nil {
-						return fmt.Errorf("error downloading external emoji %s: %v", r.Emoji.ID, err)
+						return &PullError{"downloading external emoji " + r.Emoji.ID, err}
 					}
 				}
 
@@ -348,7 +357,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				name := strings.Replace(r.Emoji.APIName(), "#", "%23", -1)
 				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, name, 100)
 				if err != nil {
-					return fmt.Errorf("error getting users for reaction %s to %s: %v", r.Emoji.APIName(), msgs[i].ID, err)
+					return &PullError{"getting users for reaction " + r.Emoji.APIName() + " to " + msgs[i].ID, err}
 				}
 
 				for _, u := range users {
