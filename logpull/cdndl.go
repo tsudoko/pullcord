@@ -38,7 +38,7 @@ func (p *Puller) cdnDL(v interface{}, subtype int) error {
 
 	switch v.(type) {
 	case *discordgo.MessageAttachment:
-		return cdndl.Attachment(v.(*discordgo.MessageAttachment).URL)
+		err = cdndl.Attachment(v.(*discordgo.MessageAttachment).URL)
 	case *discordgo.Guild:
 		g := v.(*discordgo.Guild)
 		switch subtype {
