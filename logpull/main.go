@@ -340,7 +340,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			for _, a := range msgs[i].Attachments {
 				err := p.cdnDL(a, 0)
 				if err != nil {
-					return &PullError{"downloading attachment " + a.ID, err}
+					return &PullError{"downloading attachment " + a.ID + " for message " + msgs[i].ID, err}
 				}
 				tsv.Write(f, logentry.Make("history", "add", &logentry.Attachment{*a, msgs[i].ID}))
 			}
