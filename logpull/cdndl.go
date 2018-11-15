@@ -16,10 +16,12 @@ const (
 	cdnChannelIcon
 )
 
+var skipCodes = map[int]bool{404: true, 403: true}
+
 // TODO: move somewhere else
 func handleDLError(err error) error {
-	if cerr, ok := err.(cdndl.ErrNotOk); ok && cerr.StatusCode == 404 {
-		log.Printf("warning: skipping %s (404)", cerr.URL)
+	if cerr, ok := err.(cdndl.ErrNotOk); ok && skipCodes[cerr.StatusCode] {
+		log.Printf("warning: skipping %s (%d)", cerr.URL, cerr.StatusCode)
 		return nil
 	} else {
 		// TODO: retry?
