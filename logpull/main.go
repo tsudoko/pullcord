@@ -275,6 +275,11 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 	for {
 		msgs, err := p.d.ChannelMessages(c.ID, 100, "", after, "")
+		if r, ok := err.(*discordgo.RESTError); ok && r.Message != nil && r.Message.Code == 50001 { // Missing Access
+			log.Printf("[%s/%s] warning: skipping channel (%s)", c.GuildID, c.ID, r.Message.Message)
+			break
+		}
+
 		if err != nil {
 			return &PullError{"getting messages from " + after, err}
 		}
