@@ -4,6 +4,14 @@ pullcord
 `Pullcord` is a Discord archiver. It downloads channel logs, server logs,
 attachments, avatars, server icons, server splashes and emoji.
 
+Install
+-------
+```
+go get github.com/tsudoko/pullcord/cmd/pullcord
+```
+
+This installs `pullcord` to `$GOPATH/bin`, by default `~/go/bin`.
+
 How to use
 ----------
 
