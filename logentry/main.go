@@ -111,6 +111,14 @@ func Make(ftype, op string, v interface{}) []string {
 			string(v.EditedTimestamp),
 			formatBool("tts", v.Tts),
 			v.Content,
+			formatBool("webhook", v.WebhookID != ""),
+			v.Author.Username,
+			v.Author.Avatar,
+		}
+		// only webhooks can override username/avatar at the moment
+		if v.WebhookID == "" {
+			row[6] = ""
+			row[7] = ""
 		}
 	case *Attachment:
 		row = []string{v.ID, v.MessageID, v.Filename}

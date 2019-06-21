@@ -42,11 +42,14 @@ but it wasn't present at the time of fetching.
 
 ### `message`
 
-    time,fetchtype,action,type,id,authorid,editedtime,tts,content
+    time,fetchtype,action,type,id,authorid,editedtime,tts,content,webhook,usernameoverride,avataroverride
 
  - `authorid` (required)
  - `editedtime` - ISO 8601 timestamp (µs) of last edit
  - `tts` (boolean)
+ - `webhook` (boolean)
+ - `usernameoverride` - username shown if the author is a webhook
+ - `avataroverride` - avatar shown if the autor is a webhook
 
 Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
