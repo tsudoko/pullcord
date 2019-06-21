@@ -369,7 +369,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 				for _, u := range users {
 					reaction := &logentry.Reaction{
-						discordgo.MessageReaction{u.ID, msgs[i].ID, *r.Emoji, c.ID},
+						discordgo.MessageReaction{u.ID, msgs[i].ID, *r.Emoji, c.ID, c.GuildID},
 						1,
 					}
 
@@ -378,7 +378,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 
 				if r.Count > 100 {
 					reaction := &logentry.Reaction{
-						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, c.ID},
+						discordgo.MessageReaction{"", msgs[i].ID, *r.Emoji, c.ID, c.GuildID},
 						r.Count - 100,
 					}
 					tsv.Write(f, logentry.Make("history", "add", reaction))
