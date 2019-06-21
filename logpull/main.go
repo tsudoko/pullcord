@@ -300,16 +300,15 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				p.ever["member"] = make(map[string]bool)
 			}
 
+			if msgs[i].Author.Avatar != "" {
+				err = p.cdnDL(msgs[i].Author, cdnAvatar)
+				if err != nil {
+					return &PullError{"downloading avatar for user " + msgs[i].Author.ID, err}
+				}
+			}
+
 			if !p.ever["member"][msgs[i].Author.ID] {
 				member := &discordgo.Member{User: msgs[i].Author}
-
-				if member.User.Avatar != "" {
-					err := p.cdnDL(member.User, cdnAvatar)
-					if err != nil {
-						return &PullError{"downloading avatar for user " + member.User.ID, err}
-					}
-				}
-
 				p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
 				p.ever["member"][msgs[i].Author.ID] = true
 			}
