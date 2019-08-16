@@ -14,7 +14,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const maxSize = "2048"
+const maxSize = "4096"
 const longNamePlaceholder = "_long_filename"
 
 // Returned when the request gets a non-200 HTTP response.
