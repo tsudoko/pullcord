@@ -322,6 +322,9 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				member := &discordgo.Member{User: msgs[i].Author}
 				p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
 				p.ever["member"][msgs[i].Author.ID] = true
+			} else if msgs[i].WebhookID == "" {
+				member := &discordgo.Member{User: msgs[i].Author}
+				p.cache.WriteNew(p.log, logentry.Make("history", "add", member))
 			}
 
 			for _, u := range msgs[i].Mentions {
