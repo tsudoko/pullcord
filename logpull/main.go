@@ -376,11 +376,9 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 					}
 				}
 
-				// workaround until https://github.com/bwmarrin/discordgo/pull/615 is merged
-				name := strings.Replace(r.Emoji.APIName(), "#", "%23", -1)
-				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, name, 100)
+				users, err := p.d.MessageReactions(c.ID, msgs[i].ID, r.Emoji.APIName(), 100)
 				if rerr, ok := err.(*discordgo.RESTError); ok && rerr.Message != nil && rerr.Message.Code == 10014 { // Unknown Emoji
-					log.Printf("[%s/%s] warning: skipping reaction \"%s\" for %s (%s)", c.GuildID, c.ID, name, msgs[i].ID, rerr.Message.Message)
+					log.Printf("[%s/%s] warning: skipping reaction \"%s\" for %s (%s)", c.GuildID, c.ID, r.Emoji.APIName(), msgs[i].ID, rerr.Message.Message)
 				} else if err != nil {
 					return &PullError{"getting users for reaction " + r.Emoji.APIName() + " to " + msgs[i].ID, err}
 				}
