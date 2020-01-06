@@ -320,6 +320,8 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			var msgMember *discordgo.Member
 			if msgs[i].Member != nil {
 				msgMember = msgs[i].Member
+			} else if m, err := p.d.State.Member(c.GuildID, msgs[i].Author.ID); m != nil && err == nil {
+				msgMember = m
 			} else {
 				msgMember = &discordgo.Member{User: msgs[i].Author}
 			}
