@@ -318,13 +318,18 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 				}
 			}
 
-			if !p.ever["member"][msgs[i].Author.ID] {
-				member := &discordgo.Member{User: msgs[i].Author}
-				p.cache.WriteNew(p.log, logentry.Make("history", "del", member))
-				p.ever["member"][msgs[i].Author.ID] = true
+			var msgMember *discordgo.Member
+			if msgs[i].Member != nil {
+				msgMember = msgs[i].Member
+			} else {
+				msgMember = &discordgo.Member{User: msgs[i].Author}
+			}
+
+			if !p.ever["member"][msgMember.User.ID] {
+				p.cache.WriteNew(p.log, logentry.Make("history", "del", msgMember))
+				p.ever["member"][msgMember.User.ID] = true
 			} else if msgs[i].WebhookID == "" {
-				member := &discordgo.Member{User: msgs[i].Author}
-				p.cache.WriteNew(p.log, logentry.Make("history", "add", member))
+				p.cache.WriteNew(p.log, logentry.Make("history", "add", msgMember))
 			}
 
 			for _, u := range msgs[i].Mentions {
