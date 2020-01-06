@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -161,7 +160,7 @@ func (p *Puller) PullGuild(id string) error {
 	// ---
 	// this limitation means only active members (those who send messages
 	// between pullcord runs) can be recorded, without nicknames
-	if !strings.HasPrefix(strings.ToLower(p.d.Token), "bot ") {
+	if !isBotSession(p.d) {
 		log.Printf("[%s] cannot download members with a user token, member data will not be fully accurate", id)
 		return nil
 	}
@@ -328,7 +327,7 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			if !p.ever["member"][msgMember.User.ID] {
 				p.cache.WriteNew(p.log, logentry.Make("history", "del", msgMember))
 				p.ever["member"][msgMember.User.ID] = true
-			} else if msgs[i].WebhookID == "" {
+			} else if !isBotSession(p.d) && msgs[i].WebhookID == "" { // message authors contain less data than full members, so write them only if we can't get full members (we'd overwrite full entries with empty values otherwise)
 				p.cache.WriteNew(p.log, logentry.Make("history", "add", msgMember))
 			}
 
