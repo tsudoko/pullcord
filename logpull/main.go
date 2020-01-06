@@ -155,6 +155,17 @@ func (p *Puller) PullGuild(id string) error {
 		delete(p.deleted[logentry.Type(e)], e.ID)
 	}
 
+	// user tokens are banned from the GuildMembers endpoint, we check the
+	// token preemptively instead of trying anyway because triggering the
+	// ban locks down the account until it's re-verified
+	// ---
+	// this limitation means only active members (those who send messages
+	// between pullcord runs) can be recorded, without nicknames
+	if !strings.HasPrefix(strings.ToLower(p.d.Token), "bot ") {
+		log.Printf("[%s] cannot download members with a user token, member data will not be fully accurate", id)
+		return nil
+	}
+
 	after := "0"
 	for {
 		members, err := p.d.GuildMembers(id, after, 1000)
