@@ -4,6 +4,7 @@ package logentry
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -149,6 +150,7 @@ func Make(ftype, op string, v interface{}) []string {
 			v.EmbedChannelID,
 		}
 	case *discordgo.Member:
+		sort.StringSlice(v.Roles).Sort()
 		row = []string{
 			v.User.ID,
 			v.User.Username,
