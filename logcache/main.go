@@ -55,6 +55,7 @@ func (cache *Entries) WriteNew(w io.Writer, e []string) {
 	if len(cacheEntry) < logentry.HTime+1 || len(e) < logentry.HTime+1 ||
 		!entryEquals(cacheEntry[logentry.HTime+1:], e[logentry.HTime+1:]) {
 		tsv.Write(w, e)
+		(*cache)[e[logentry.HType]][e[logentry.HID]] = e
 	}
 }
 
