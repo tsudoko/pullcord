@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -158,11 +159,44 @@ func (p *Puller) PullGuild(id string) error {
 	// token preemptively instead of trying anyway because triggering the
 	// ban locks down the account until it's re-verified
 	// ---
-	// this limitation means only active members (those who send messages
-	// between pullcord runs) can be recorded, without nicknames
+	// this limitation means that on large guilds only active members
+	// (those who send messages between pullcord runs) can be recorded,
+	// without nicknames
 	if !isBotSession(p.d) {
-		log.Printf("[%s] cannot download members with a user token, member data will not be fully accurate", id)
+		guildChan := make(chan *discordgo.Guild)
+		removeSyncHandler := p.d.AddHandler(func(s *discordgo.Session, e *discordgo.GuildSync) {
+			if e.Guild.ID == id {
+				guildChan <- e.Guild
+			}
+		})
 		p.d.GuildSync([]string{id})
+
+		var syncedGuild *discordgo.Guild
+		select {
+		case syncedGuild = <-guildChan:
+		case <-time.After(5 * time.Second):
+			// TODO: return non-fatal error instead?
+			log.Printf("[%s] guild sync request timed out, member data will not be fully accurate", id)
+			removeSyncHandler()
+			return nil
+		}
+
+		removeSyncHandler()
+
+		if syncedGuild.Large {
+			// TODO: return non-fatal error instead?
+			log.Printf("[%s] cannot download members from large guilds with a user token, member data will not be fully accurate", id)
+			return nil
+		}
+
+		for _, m := range syncedGuild.Members {
+			if err := p.pullMember(m); err != nil {
+				return err
+			}
+		}
+
+		lastUser := syncedGuild.Members[len(syncedGuild.Members)-1].User
+		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(syncedGuild.Members), lastUser.ID, lastUser.Username)
 		return nil
 	}
 
