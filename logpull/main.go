@@ -318,16 +318,22 @@ func (p *Puller) PullChannel(c *discordgo.Channel) error {
 			}
 
 			var msgMember *discordgo.Member
+			memberInState := false
 			if msgs[i].Member != nil {
 				msgMember = msgs[i].Member
 			} else if m, err := p.d.State.Member(c.GuildID, msgs[i].Author.ID); m != nil && err == nil {
 				msgMember = m
+				memberInState = true
 			} else {
 				msgMember = &discordgo.Member{User: msgs[i].Author}
 			}
 
 			if !p.ever["member"][msgMember.User.ID] {
-				p.cache.WriteNew(p.log, logentry.Make("history", "del", msgMember))
+				if memberInState {
+					p.cache.WriteNew(p.log, logentry.Make("history", "add", msgMember))
+				} else {
+					p.cache.WriteNew(p.log, logentry.Make("history", "del", msgMember))
+				}
 				p.ever["member"][msgMember.User.ID] = true
 			} else if !isBotSession(p.d) && msgs[i].WebhookID == "" { // message authors contain less data than full members, so write them only if we can't get full members (we'd overwrite full entries with empty values otherwise)
 				p.cache.WriteNew(p.log, logentry.Make("history", "add", msgMember))
