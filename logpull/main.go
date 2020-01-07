@@ -197,28 +197,27 @@ func (p *Puller) PullGuild(id string) error {
 
 		lastUser := syncedGuild.Members[len(syncedGuild.Members)-1].User
 		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(syncedGuild.Members), lastUser.ID, lastUser.Username)
-		return nil
-	}
-
-	after := "0"
-	for {
-		members, err := p.d.GuildMembers(id, after, 1000)
-		if err != nil {
-			return &PullError{"getting members from " + after, err}
-		}
-
-		if len(members) == 0 {
-			break
-		}
-
-		for _, m := range members {
-			after = m.User.ID
-			if err := p.pullMember(m); err != nil {
-				return err
+	} else {
+		after := "0"
+		for {
+			members, err := p.d.GuildMembers(id, after, 1000)
+			if err != nil {
+				return &PullError{"getting members from " + after, err}
 			}
-		}
 
-		log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
+			if len(members) == 0 {
+				break
+			}
+
+			for _, m := range members {
+				after = m.User.ID
+				if err := p.pullMember(m); err != nil {
+					return err
+				}
+			}
+
+			log.Printf("[%s] downloaded %d members, last id %s with name %s", id, len(members), after, members[len(members)-1].User.Username)
+		}
 	}
 
 	p.log.Sync()
