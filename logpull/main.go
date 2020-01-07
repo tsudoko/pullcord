@@ -162,6 +162,7 @@ func (p *Puller) PullGuild(id string) error {
 	// between pullcord runs) can be recorded, without nicknames
 	if !isBotSession(p.d) {
 		log.Printf("[%s] cannot download members with a user token, member data will not be fully accurate", id)
+		p.d.GuildSync([]string{id})
 		return nil
 	}
 
