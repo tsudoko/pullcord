@@ -122,7 +122,7 @@ Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
     time,fetchtype,action,type,id,chantype,pos,name,topic,nsfw,category,recipients,icon
 
- - `chantype` (required) - `text`, `voice`, `category`, `dm` or `groupdm`
+ - `chantype` (required) - `text`, `voice`, `category`, `dm`, `groupdm`, `news` or `store`
  - `pos` (required)
  - `name` (required if not `dm` or `groupdm`)
  - `nsfw` (boolean)

@@ -64,6 +64,10 @@ func formatChannelType(t discordgo.ChannelType) string {
 		return "dm"
 	case discordgo.ChannelTypeGroupDM:
 		return "groupdm"
+	case discordgo.ChannelTypeGuildNews:
+		return "news"
+	case discordgo.ChannelTypeGuildStore:
+		return "store"
 	default:
 		log.Panicf("unsupported channel type %v", t)
 		return "invalid"
