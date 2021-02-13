@@ -74,6 +74,18 @@ func formatChannelType(t discordgo.ChannelType) string {
 	}
 }
 
+func formatPermOverwriteType(t discordgo.PermissionOverwriteType) string {
+	switch t {
+	case discordgo.PermissionOverwriteTypeRole:
+		return "role"
+	case discordgo.PermissionOverwriteTypeMember:
+		return "member"
+	default:
+		log.Panicf("unsupported permission overwrite type %v", t)
+		return "invalid"
+	}
+}
+
 func Timestamp() string {
 	return time.Now().Format(timeFormat)
 }
@@ -114,7 +126,7 @@ func Make(ftype, op string, v interface{}) []string {
 			v.ID,
 			v.Author.ID,
 			string(v.EditedTimestamp),
-			formatBool("tts", v.Tts),
+			formatBool("tts", v.TTS),
 			v.Content,
 			formatBool("webhook", v.WebhookID != ""),
 			v.Author.Username,
@@ -150,8 +162,8 @@ func Make(ftype, op string, v interface{}) []string {
 			v.OwnerID,
 			v.AfkChannelID,
 			strconv.Itoa(v.AfkTimeout),
-			formatBool("embeddable", v.EmbedEnabled),
-			v.EmbedChannelID,
+			formatBool("embeddable", v.WidgetEnabled),
+			v.WidgetChannelID,
 		}
 	case *discordgo.Member:
 		sort.StringSlice(v.Roles).Sort()
@@ -169,7 +181,7 @@ func Make(ftype, op string, v interface{}) []string {
 			v.Name,
 			strconv.Itoa(v.Color),
 			strconv.Itoa(v.Position),
-			strconv.Itoa(v.Permissions),
+			strconv.FormatInt(v.Permissions, 10),
 			formatBool("hoist", v.Hoist),
 		}
 	case *discordgo.Channel:
@@ -187,9 +199,9 @@ func Make(ftype, op string, v interface{}) []string {
 	case *discordgo.PermissionOverwrite:
 		row = []string{
 			v.ID,
-			v.Type,
-			strconv.Itoa(v.Allow),
-			strconv.Itoa(v.Deny),
+			formatPermOverwriteType(v.Type),
+			strconv.FormatInt(v.Allow, 10),
+			strconv.FormatInt(v.Deny, 10),
 		}
 	case *discordgo.Emoji:
 		row = []string{
