@@ -42,7 +42,7 @@ but it wasn't present at the time of fetching.
 
 ### `message`
 
-    time,fetchtype,action,type,id,authorid,editedtime,tts,content,webhook,usernameoverride,avataroverride,msgtype
+    time,fetchtype,action,type,id,authorid,editedtime,tts,content,webhook,usernameoverride,avataroverride,msgtype,refguildid,refchanid,refmsgid
 
  - `authorid` (required)
  - `editedtime` - ISO 8601 timestamp (µs) of last edit

@@ -151,6 +151,12 @@ func Make(ftype, op string, v interface{}) []string {
 
 	switch v := v.(type) {
 	case *discordgo.Message:
+		ref := []string{"", "", ""}
+		if v.MessageReference != nil {
+			ref[0] = v.MessageReference.GuildID
+			ref[1] = v.MessageReference.ChannelID
+			ref[2] = v.MessageReference.MessageID
+		}
 		row = []string{
 			v.ID,
 			v.Author.ID,
@@ -161,6 +167,9 @@ func Make(ftype, op string, v interface{}) []string {
 			v.Author.Username,
 			v.Author.Avatar,
 			formatMessageType(v.Type),
+			ref[0],
+			ref[1],
+			ref[2],
 		}
 		// only webhooks can override username/avatar at the moment
 		if v.WebhookID == "" {
