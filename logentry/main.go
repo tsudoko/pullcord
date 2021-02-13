@@ -3,6 +3,7 @@ package logentry
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -49,6 +50,34 @@ func formatBool(name string, variable bool) string {
 		return name
 	} else {
 		return ""
+	}
+}
+
+func formatMessageType(t discordgo.MessageType) string {
+	switch t {
+	case discordgo.MessageTypeDefault:
+		return ""
+	case discordgo.MessageTypeRecipientAdd:
+		return "recipient_add"
+	case discordgo.MessageTypeRecipientRemove:
+		return "recipient_remove"
+	case discordgo.MessageTypeCall:
+		return "call"
+	case discordgo.MessageTypeChannelNameChange:
+		return "channel_name_change"
+	case discordgo.MessageTypeChannelIconChange:
+		return "channel_icon_change"
+	case discordgo.MessageTypeChannelPinnedMessage:
+		return "channel_pinned_message"
+	case discordgo.MessageTypeGuildMemberJoin:
+		return "guild_member_join"
+	case discordgo.MessageTypeReply:
+		return "reply"
+	case discordgo.MessageTypeApplicationCommand:
+		return "application_command"
+	default:
+		log.Printf("unsupported message type %v", t)
+		return fmt.Sprintf("unknown-%v", t)
 	}
 }
 
@@ -131,6 +160,7 @@ func Make(ftype, op string, v interface{}) []string {
 			formatBool("webhook", v.WebhookID != ""),
 			v.Author.Username,
 			v.Author.Avatar,
+			formatMessageType(v.Type),
 		}
 		// only webhooks can override username/avatar at the moment
 		if v.WebhookID == "" {

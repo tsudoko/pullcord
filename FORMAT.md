@@ -42,7 +42,7 @@ but it wasn't present at the time of fetching.
 
 ### `message`
 
-    time,fetchtype,action,type,id,authorid,editedtime,tts,content,webhook,usernameoverride,avataroverride
+    time,fetchtype,action,type,id,authorid,editedtime,tts,content,webhook,usernameoverride,avataroverride,msgtype
 
  - `authorid` (required)
  - `editedtime` - ISO 8601 timestamp (µs) of last edit
@@ -50,6 +50,7 @@ but it wasn't present at the time of fetching.
  - `webhook` (boolean)
  - `usernameoverride` - username shown if the author is a webhook
  - `avataroverride` - avatar shown if the autor is a webhook
+ - `msgtype` - one of `` (empty string), `recipient_add`, `recipient_remove`, `call`, `channel_name_change`, `channel_icon_change`, `channel_pinned_message`, `guild_member_join`, `reply`, `application_command`, `unknown-[id]`
 
 Sample timestamp: `2017-06-24T13:06:38.555000+00:00`
 
