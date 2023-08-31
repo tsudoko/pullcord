@@ -25,6 +25,18 @@ func Read(s *bufio.Scanner) []string {
 	return record
 }
 
+func ReadString(s string) []string {
+	record := strings.Split(s, "\t")
+
+	for i := range record {
+		for j := len(subs) - 1; j >= 0; j-- {
+			record[i] = strings.Replace(record[i], subs[j][1], subs[j][0], -1)
+		}
+	}
+
+	return record
+}
+
 func Write(w io.Writer, record []string) error {
 	for i := range record {
 		for j := 0; j < len(subs); j++ {
