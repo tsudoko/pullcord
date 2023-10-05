@@ -7,7 +7,7 @@ attachments, avatars, server icons, server splashes and emoji.
 Install
 -------
 ```
-go get github.com/tsudoko/pullcord/cmd/pullcord
+go install github.com/tsudoko/pullcord/cmd/pullcord@latest
 ```
 
 This installs `pullcord` to `$GOPATH/bin`, by default `~/go/bin`.
